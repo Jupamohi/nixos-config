@@ -8,6 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./paquetes.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
@@ -96,26 +97,14 @@
 
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
-   environment.systemPackages = with pkgs; [     
-     neovim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default. wget
-     kitty
-     waybar
-     rofi
-     swaynotificationcenter
-     grim
-     slurp
-     wl-clipboard
-     thunar
-     zsh
-     tmux
-     vscode
-     espanso-wayland
-     brave
-     git 
-     curl
-     zsh-powerlevel10k
-   ];
+  # environment.systemPackages = with pkgs; [     
+  # ];
 
+#*************************** Aqui pongo mis servicios************************************#
+  # portapapeles entre VM y HOST
+  services.spice-vdagentd.enable = true;
+  programs.zsh.enable = true;
+  users.users.jupamohi.shell = pkgs.zsh;
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
