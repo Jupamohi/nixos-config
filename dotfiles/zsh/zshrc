@@ -2,7 +2,7 @@ alias actualizar="~/.local/bin/update-system.sh"
 alias ls="eza --icons=auto --git"
 alias nrsl="sudo nixos-rebuild switch --flake .#laptopVM"
 alias nrsm="sudo nixos-rebuild switch --flake .#maicolVM"
-alias cat="bat"
+alias cat="bat --paging=never"
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
