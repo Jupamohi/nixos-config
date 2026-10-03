@@ -110,7 +110,12 @@
   # habilitar los flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-
+  # fuentes  
+  fonts.packages = with pkgs; [
+    nerd-fonts.fantasque-sans-mono
+    nerd-fonts.jetbrains-mono
+    noto-fonts-color-emoji
+  ];
 
 
   # Some programs need SUID wrappers, can be configured further or are

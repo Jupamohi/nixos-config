@@ -73,7 +73,9 @@
     fira-code
     jetbrains-mono
     noto-fonts
-    noto-fonts-color-emoji
+#	nerd-fonts.fantasque-sans-mono   
+#   nerd-fonts.jetbrains-mono       
+#   noto-fonts-color-emoji
 
     # Theming
     libsForQt5.qt5ct
