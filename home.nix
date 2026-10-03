@@ -9,11 +9,11 @@
   # pero que en realidad son "de usuario" (opcional moverlos aquí después)
 
   # --- Dotfiles: symlinks directos a lo que ya tienes en el repo ---
-  home.file.".zshrc".source = ../dotfiles/zsh/zshrc;
-  home.file.".p10k.zsh".source = ../dotfiles/zsh/p10k.zsh;
+  home.file.".zshrc".source = ./dotfiles/zsh/zshrc;
+  home.file.".p10k.zsh".source = ./dotfiles/zsh/p10k.zsh;
 
-  xdg.configFile."nvim/init.lua".source = ../dotfiles/nvim/init.lua;
-  xdg.configFile."kitty".source = ../dotfiles/kitty;
+  xdg.configFile."nvim/init.lua".source = ./dotfiles/nvim/init.lua;
+  xdg.configFile."kitty".source = ./dotfiles/kitty;
 
   # --- Zsh: Home Manager maneja oh-my-zsh y plugins de forma nativa ---
   programs.zsh = {
