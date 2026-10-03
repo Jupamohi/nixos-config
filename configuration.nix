@@ -103,8 +103,17 @@
 #*************************** Aqui pongo mis servicios************************************#
   # portapapeles entre VM y HOST
   services.spice-vdagentd.enable = true;
+
+  # configuracion para zsh
   programs.zsh.enable = true;
   users.users.jupamohi.shell = pkgs.zsh;
+
+  # habilitar los flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+
+
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
