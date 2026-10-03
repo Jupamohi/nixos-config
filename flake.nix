@@ -12,6 +12,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+   }
 
   outputs = { self, nixpkgs, home-manager, plasma-manager, ... }:
   let
@@ -36,4 +37,4 @@
       maicolVM = mkHost ./hosts/hardware-maicolVM/hardware-configuration.nix;
     };
   };
-};
+}
