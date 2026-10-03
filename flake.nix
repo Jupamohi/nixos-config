@@ -36,4 +36,4 @@
       maicolVM = mkHost ./hosts/hardware-maicolVM/hardware-configuration.nix;
     };
   };
-}
+};
