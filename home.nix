@@ -43,4 +43,10 @@
 
   # plasma manager
   programs.plasma.enable = true;
+  programs.plasma = {
+   configFile = {
+     kscreenlockerrc.Daemon.Autolock = false;
+     kscreenlockerrc.Daemon.Timeout = 0;
+   };
+  };
 }
