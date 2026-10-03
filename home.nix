@@ -40,4 +40,7 @@
   ];
   initContent = builtins.readFile ./dotfiles/zsh/zshrc;
   };
+
+  # plasma manager
+  programs.plasma.enable = true;
 }
