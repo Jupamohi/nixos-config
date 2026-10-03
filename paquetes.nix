@@ -83,5 +83,11 @@
     kdePackages.qt6ct
     libsForQt5.qtstyleplugin-kvantum
     gtk-engine-murrine
+
+	# Theming MacOS
+    whitesur-gtk-theme
+    whitesur-icon-theme
+    whitesur-kde
+    whitesur-cursors
   ];
 }
