@@ -16,6 +16,7 @@
     zsh
     kitty
     eza
+	bat
     tree
     btop
     nvtopPackages.full
