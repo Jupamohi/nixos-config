@@ -3,5 +3,6 @@ alias ls="eza --icons=auto --git"
 alias nrsl="sudo nixos-rebuild switch --flake .#laptopVM"
 alias nrsm="sudo nixos-rebuild switch --flake .#maicolVM"
 
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 fastfetch
