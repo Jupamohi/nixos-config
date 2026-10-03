@@ -83,7 +83,6 @@
     kdePackages.qt6ct
     libsForQt5.qtstyleplugin-kvantum
     gtk-engine-murrine
-	plank
 
 	# Theming MacOS
     whitesur-gtk-theme
