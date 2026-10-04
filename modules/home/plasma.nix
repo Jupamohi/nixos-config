@@ -14,7 +14,52 @@
       org_kde_powerdevil.powerProfile = "Battery";
     };
 
+	workspace = {
+      lookAndFeel = "com.github.vinceliuice.WhiteSur-dark";
+      iconTheme = "WhiteSur-dark";
+      cursor = {
+        theme = "WhiteSur-cursors";
+        size = 24;
+      };
+      wallpaper = "/home/jupamohi/nixos-config/dotfiles/wallpapers/windows-11-dark-mode-abstract-background-black-background-7680x4320-8710.png";
+    };
+
+	panels = [
+  {
+    location = "top";
+    height = 44;
+    widgets = [
+      {
+        name = "org.kde.plasma.kickoff";
+        config.General = {
+          icon = "distributor-logo-nixos";
+          useCustomButtonImage = true;
+        };
+      }
+      "org.kde.plasma.marginsseparator"
+      "org.kde.plasma.minimizeall"
+      "org.kde.plasma.marginsseparator"
+      {
+        name = "org.kde.plasma.icontasks";
+        config.General.launchers = "";
+      }
+      "org.kde.plasma.panelspacer"
+      {
+        name = "org.kde.plasma.digitalclock";
+        config.Appearance = {
+          dateFormat = "longDate";
+          showDate = false;
+          showSeconds = "Never";
+        };
+      }
+      "org.kde.plasma.panelspacer"
+      "org.kde.plasma.systemtray"
+    ];
+  }
+];
+
     configFile = {
+	  kdeglobals.KDE.AutomaticLookAndFeel = false;
       kscreenlockerrc.Daemon.Autolock = false;
       kscreenlockerrc.Daemon.Timeout = 0;
       kwinrc.Compositing.WindowsBlockCompositing = false;
