@@ -21,13 +21,16 @@
         theme = "WhiteSur-cursors";
         size = 24;
       };
-      wallpaper = "/home/jupamohi/nixos-config/dotfiles/wallpapers/windows-11-dark-mode-abstract-background-black-background-7680x4320-8710.png";
+      wallpaper = "file:///home/jupamohi/nixos-config/dotfiles/wallpapers/windows-11-dark-mode-abstract-background-black-background-7680x4320-8710.png";
     };
 
 	panels = [
   {
     location = "top";
     height = 44;
+	opacity = "opaque";
+    floating = true;
+    hiding = "none";
     widgets = [
       {
         name = "org.kde.plasma.kickoff";
