@@ -14,6 +14,4 @@
 
   xdg.configFile."nvim/init.lua".source = ./dotfiles/nvim/init.lua;
   xdg.configFile."kitty".source = ./dotfiles/kitty;
-
-  programs.hyprland.enable = true;
 }

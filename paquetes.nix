@@ -11,6 +11,9 @@
     vscode
     neovim
     git
+	obsidian
+	mysql-workbench
+	mysql84
 
     # Terminal / shell
     zsh
@@ -74,9 +77,6 @@
     fira-code
     jetbrains-mono
     noto-fonts
-#	nerd-fonts.fantasque-sans-mono   
-#   nerd-fonts.jetbrains-mono       
-#   noto-fonts-color-emoji
 
     # Theming
     libsForQt5.qt5ct
