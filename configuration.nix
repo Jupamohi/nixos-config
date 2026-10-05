@@ -53,6 +53,21 @@
   # habilitar hyprland
   programs.hyprland.enable = true;
 
+  # Agente de autenticación polkit para sesiones Hyprland.
+  # hyprpolkitagent ya viene en environment.systemPackages (paquetes.nix), pero eso
+  # NO instala su unit de usuario. hace falta:
+  # - systemd.packages: instala share/systemd/user/hyprpolkitagent.service
+  # - wantedBy: crea el symlink graphical-session.target.wants (usando la unit
+  #   del paquete vía overrideStrategy=asDropinIfExists, sin pisar su ExecStart)
+  # El portal NO se declara aquí: programs.hyprland.enable ya activa
+  # xdg.portal.enable + extraPortals con xdg-desktop-portal-hyprland.
+  systemd.packages = [
+    pkgs.hyprpolkitagent
+  ];
+  systemd.user.services.hyprpolkitagent = {
+    wantedBy = [ "graphical-session.target" ];
+  };
+
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "latam";

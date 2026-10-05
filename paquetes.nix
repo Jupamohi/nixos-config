@@ -37,15 +37,25 @@
     # Hyprland y ecosistema
     hyprland
     hyprlock
-    hyprpaper
     hyprpolkitagent
     hyprsunset
     hypridle
     xdg-desktop-portal-hyprland
     waybar
     rofi
-    dunst
     swaynotificationcenter
+
+    # KoolDots extras
+    wallust
+    awww
+    thunar
+    thunar-volman
+    gvfs
+    xdg-desktop-portal-gtk
+    networkmanagerapplet
+    hyprpicker
+    wlr-randr
+    libnotify
     cliphist
     wl-clipboard
     wtype
