@@ -1,7 +1,36 @@
 { pkgs, ... }:
 
+
+let
+  # Upstream no está en nixpkgs; el dotfile lo invoca como binario
+  # `waybar-weather` (waybar/ModulesCustom -> "custom/weather2").
+  # Upstream: https://github.com/wneessen/waybar-weather
+  waybar-weather = pkgs.buildGoModule {
+    pname = "waybar-weather";
+    version = "0.3.1";
+
+    src = pkgs.fetchgit {
+      url = "https://github.com/wneessen/waybar-weather.git";
+      rev = "cbf1d8aa80f16226b83031a3124d636604e1e811"; # v0.3.1
+      hash = "sha256-OAqwl3GILTzYOk7pbREaLbDVhDPpbrrkrUfuSo5L3oY=";
+    };
+
+    vendorHash = "sha256-4Ccz/l1hX/NplF+M6jzUEuu8U90x986XBVJ9qNFVGoA=";
+
+    subPackages = [ "cmd/waybar-weather" ];
+
+    meta = {
+      description = "Waybar module for weather information";
+      homepage = "https://github.com/wneessen/waybar-weather";
+      license = pkgs.lib.licenses.mit;
+      mainProgram = "waybar-weather";
+      platforms = pkgs.lib.platforms.unix;
+    };
+  };
+in
 {
   environment.systemPackages = with pkgs; [
+    waybar-weather
     # Navegadores / comunicación
     brave
     discord

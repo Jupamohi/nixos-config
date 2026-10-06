@@ -57,15 +57,25 @@
   # hyprpolkitagent ya viene en environment.systemPackages (paquetes.nix), pero eso
   # NO instala su unit de usuario. hace falta:
   # - systemd.packages: instala share/systemd/user/hyprpolkitagent.service
-  # - wantedBy: crea el symlink graphical-session.target.wants (usando la unit
+  # - wantedBy: crea el symlink hyprland-session.target.wants (usando la unit
   #   del paquete vía overrideStrategy=asDropinIfExists, sin pisar su ExecStart)
+  #
+  # Se ata a hyprland-session.target y NO a graphical-session.target a
+  # propósito: SDDM arranca graphical-session.target tanto en Plasma X11 como
+  # en Hyprland, así que con graphical-session.target el agente de polkit
+  # (que es Wayland) también arrancaba bajo Plasma. Ese target lo declara
+  # modules/home/hyprland.nix y solo lo activa Hyprland.
   # El portal NO se declara aquí: programs.hyprland.enable ya activa
   # xdg.portal.enable + extraPortals con xdg-desktop-portal-hyprland.
   systemd.packages = [
     pkgs.hyprpolkitagent
   ];
   systemd.user.services.hyprpolkitagent = {
-    wantedBy = [ "graphical-session.target" ];
+    wantedBy = [ "hyprland-session.target" ];
+    partOf = [ "hyprland-session.target" ];
+    after = [ "hyprland-session.target" ];
+    # Guarda extra: solo arranca dentro de una sesión Hyprland (Wayland).
+    unitConfig.ConditionEnvironment = "XDG_CURRENT_DESKTOP=Hyprland";
   };
 
   # Configure keymap in X11
@@ -99,7 +109,7 @@
   users.users."jupamohi" = {
     isNormalUser = true;
     description = "Juan Pablo Mosquera Hinestroza";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "input" ];
     packages = with pkgs; [
       kdePackages.kate
     #  thunderbird

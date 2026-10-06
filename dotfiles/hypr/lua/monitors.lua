@@ -7,30 +7,19 @@
 
 -- Converted from config/hypr/monitors.conf (active monitor entries only).
 
-hl.monitor({
-    output = "",
-    mode = "preferred",
-    position = "auto",
-    scale = "1",
-})
-
-hl.monitor({
-    output = "",
-    mode = "highrr",
-    position = "auto",
-    scale = "1",
-})
-
-hl.monitor({
-    output = "",
-    mode = "highres",
-    position = "auto",
-    scale = "1",
-})
+-- NOTE: the upstream conversion left three rules with an EMPTY `output = ""`
+-- ("preferred"/"highrr"/"highres"). In Hyprland an empty output name is a
+-- catch-all that matches every monitor and, since it is registered first, it
+-- wins over the explicit rule below. "preferred" resolves to the DRM preferred
+-- mode of the output, so the explicit mode was silently discarded and any
+-- mode/scale change appeared to do nothing (hyprctl would report "ok" while
+-- the output stayed put, which also makes the display scale from a mismatched
+-- framebuffer and look pixelated). They are removed deliberately: name every
+-- output explicitly instead.
 
 hl.monitor({
     output = "Virtual-1",
-    mode = "1920x1080@60",
+    mode = "preferred",
     position = "auto",
     scale = "1",
 })

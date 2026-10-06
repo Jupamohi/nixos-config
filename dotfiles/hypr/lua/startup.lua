@@ -46,21 +46,24 @@ local startup_commands = {
   "$HOME/.config/hypr/initial-boot.sh",
   "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP WEATHER_UNITS",
   "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP WEATHER_UNITS",
-  -- polkit agent started via hyprpolkitagent.service (systemd user service,
-  -- wantedBy graphical-session.target; declarative in configuration.nix)
-  "nm-applet",
-  -- nm-tray now optional for ubuntu
-  -- "nm-tray",
-  -- "swaync started via Home Manager systemd user service",
+  -- Session isolation: start hyprland-session.target, which is what the
+  -- Wayland-only units in modules/home/hyprland.nix are bound to. Plasma X11
+  -- never runs this line, so those units stay inactive there. This target is
+  -- not WantedBy graphical-session.target on purpose: SDDM starts
+  -- graphical-session.target for both Plasma and Hyprland.
+  "systemctl --user start hyprland-session.target",
+  -- polkit agent: hyprpolkitagent.service (systemd user service, declarative
+  -- in configuration.nix; started by programs.hyprland.enable).
+  -- nm-applet, swaync, hypridle, hyprsunset and both cliphist watchers are
+  -- NOT launched here anymore: they are systemd units bound to
+  -- hyprland-session.target, and starting them from exec_once as well used to
+  -- spawn duplicate processes.
   -- xdg-desktop-portal-hyprland started via xdg.portal (declarative, already
   -- provided by programs.hyprland.enable)
-  "hypridle",
   scriptsDir .. "/LuaAutoReload.sh",
   scriptsDir .. "/Hyprsunset.sh init",
   -- NOTE: Dropterminal is currently certified only with kitty. Not all terminals behave correctly as a dropdown.
   scriptsDir .. "/Dropterminal.sh --startup kitty",
-  "wl-paste --type text --watch cliphist store",
-  "wl-paste --type image --watch cliphist store",
 }
 
 local function run_startup_commands()
