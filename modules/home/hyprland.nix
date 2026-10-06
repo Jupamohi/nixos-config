@@ -57,10 +57,27 @@ in
       recursive = true;
     };
 
-    # Cursor (optional; Hyprland sets via env/ctl)
+    # =====================================================================
+    # Cursor unificado (Hyprland + Plasma)
+    # =====================================================================
+    # Antes:
+    #   - home.pointerCursor usaba pkgs.bibata-cursors ("Bibata-Modern-Classic")
+    #   - modules/home/plasma.nix pedía "WhiteSur-cursors"
+    #   - dotfiles/hypr/UserConfigs/user_env.lua exportaba
+    #     XCURSOR_THEME=macOS y HYPRCURSOR_THEME=macOS-hypr
+    #   - user_startup.lua hacía `hyprctl setcursor macOS-hypr 24`
+    #
+    # Ninguno de esos nombres de tema macOS existe en el sistema, así que
+    # `hyprctl setcursor` devolvía "ok" sin cambiar nada (no-op silencioso) y
+    # XCURSOR_THEME="{ inexistente" hacía que GTK/Qt caiéramos al cursor por
+    # defecto al pasar el ratón sobre las ventanas. El escritorio y Waybar
+    # mostraban el tema de Hyprland/Plasma, de ahí la incoherencia.
+    #
+    # Ahora los tres puntos usan WhiteSur-cursors (estilo macOS), que es el
+    # tema que Plasma ya aplicaba y que sí está instalado.
     home.pointerCursor = {
-      package = pkgs.bibata-cursors;
-      name = "Bibata-Modern-Classic";
+      package = pkgs.whitesur-cursors;
+      name = "WhiteSur-cursors";
       size = 24;
       x11.enable = true;
       gtk.enable = true;

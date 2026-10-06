@@ -61,7 +61,7 @@ local startup_commands = {
   -- xdg-desktop-portal-hyprland started via xdg.portal (declarative, already
   -- provided by programs.hyprland.enable)
   scriptsDir .. "/LuaAutoReload.sh",
-  scriptsDir .. "/Hyprsunset.sh init",
+  -- scriptsDir .. "/Hyprsunset.sh init",
   -- NOTE: Dropterminal is currently certified only with kitty. Not all terminals behave correctly as a dropdown.
   scriptsDir .. "/Dropterminal.sh --startup kitty",
 }

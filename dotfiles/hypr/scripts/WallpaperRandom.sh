@@ -9,6 +9,18 @@
 
 PICTURES_DIR="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")"
 wallDIR="$PICTURES_DIR/wallpapers"
+repo_walls="$HOME/nixos-config/dotfiles/wallpapers"
+if [[ ! -d "$wallDIR" ]]; then
+  if [[ -d "$repo_walls" ]]; then
+    wallDIR="$repo_walls"
+  fi
+else
+  if ! find -L "$wallDIR" -maxdepth 2 -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.pnm" -o -name "*.tga" -o -name "*.tiff" -o -name "*.webp" -o -name "*.bmp" -o -name "*.farbfeld" -o -name "*.gif" \) 2>/dev/null | read -r _dummy; then
+    if [[ -d "$repo_walls" ]]; then
+      wallDIR="$repo_walls"
+    fi
+  fi
+fi
 SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
 # shellcheck source=/dev/null
 . "$SCRIPTSDIR/WallpaperCmd.sh"

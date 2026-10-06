@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -49,6 +49,69 @@
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
+
+  # ------------------------------------------------------------------
+  # Sesiones visibles en SDDM: solo "hyprland" y "plasma x11"
+  # ------------------------------------------------------------------
+  # services.displayManager.hiddenSessions NO existe en este nixpkgs (26.05):
+  # se elimino en favor de services.displayManager.sessionPackages, que es la
+  # lista de paquetes que aportan ficheros .desktop de sesion. SDDM lee
+  # ${sessionData.desktops}/share/{xsessions,wayland-sessions}, y ese directorio
+  # se construye enlazando los .desktop de cada sessionPackage.
+  #
+  # Los dos modulos que anaden sesiones aqui:
+  #   - programs.hyprland -> [ hyprland ]  (aporta hyprland + hyprland-uwsm)
+  #   - plasma6           -> [ plasma-workspace.sessions ] (aporta plasma + plasmax11)
+  #
+  # Reemplazamos la lista por paquetes de sesion filtrados que exponen solo los
+  # .desktop que queremos: hyprland (Wayland) y plasmax11 (X11, que SDDM
+  # muestra como "Plasma (X11)"). Así desaparecen "hyprland-uwsm" y
+  # "plasma" (Wayland) sin tocar nada mas del sistema.
+  services.displayManager.sessionPackages = let
+    # mkForce es imprescindible: programs.hyprland y plasma6 añaden sus
+    # propios paquetes con lib.mkAfter, así que sin forzar esta definición la
+    # lista quedaría con los 4 paquetes y seguirían apareciendo las sesiones
+    # ocultas.
+    filtered = lib.mkForce (let
+      mkSessionPkg =
+      { pkg, keep }:
+      pkgs.runCommand "${pkg.pname or pkg.name}-filtered-sessions"
+        {
+          nativeBuildInputs = [ pkgs.lndir ];
+          src = pkg;
+          passthru.providedSessions = keep;
+        }
+        ''
+          mkdir -p "$out/share/xsessions" "$out/share/wayland-sessions"
+          for d in xsessions wayland-sessions; do
+            [ -d "$src/share/$d" ] || continue
+            for n in ${lib.concatStringsSep " " keep}; do
+              if [ -f "$src/share/$d/$n.desktop" ]; then
+                ln -s "$src/share/$d/$n.desktop" "$out/share/$d/$n.desktop"
+              fi
+            done
+          done
+        '';
+      in
+      [
+        (mkSessionPkg {
+          pkg = pkgs.hyprland;
+          keep = [ "hyprland" ];
+        })
+        (mkSessionPkg {
+          pkg = pkgs.kdePackages.plasma-workspace.sessions;
+          keep = [ "plasmax11" ];
+        })
+      ]);
+  in
+  filtered;
+
+  # La sesion por defecto. plasma6.nix pone defaultSession = mkDefault "plasma",
+  # pero "plasma" es precisamente la sesion Wayland que acabamos de ocultar, asi
+  # que hay que sobreescribirla: sin esto el rebuild falla la asercion
+  # "Default graphical session, 'plasma', not found". Se deja Plasma X11 como
+  # sesion por defecto, que es la equivalente mas cercana de lo que pedia Plasma.
+  services.displayManager.defaultSession = "plasmax11";
 
   # habilitar hyprland
   programs.hyprland.enable = true;
@@ -138,12 +201,43 @@
   # habilitar los flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # fuentes  
+  # fuentes
+  #
+  # Audit de glifos rotos en Waybar (dotfiles/waybar/style.css usa
+  # font-family: "JetBrainsMono Nerd Font"):
+  #
+  # - nerd-fonts.jetbrains-mono cubre 199 de los 203 glifos de planos
+  #   privados que usan los módulos de Waybar. Los 4 ausentes (U+E6BB,
+  #   U+F590, U+F61F, U+F6A9) salen de Font Awesome, no de Nerd Fonts, y solo
+  #   corresponden a iconos de audio-dispositivo y kdeconnect; se añaden con
+  #   font-awesome.v5 más abajo.
+  #
+  # - La nube del clima que emite waybar-weather es U+2601 + U+FE0F. JetBrainsMono
+  #   Nerd Font no cubre ni U+2601 ni U+FE0F, así que fontconfig recurría a
+  #   Noto Color Emoji, que es un bitmap CBDT con un único strike de 136px y sin
+  #   contornos: Pango no puede escalarlo a los ~14px de la barra y avisa
+  #   "failed to create cairo scaled font ... Noto Color Emoji 12.999", dejando
+  #   el glifo en blanco.
+  #
+  #   Solución: noto-fonts-monochrome-emoji (Noto Emoji) es outline y sí escala.
+  #   Fontconfig da prioridad absoluta a las fuentes de emoji en color siempre
+  #   que estén instaladas (lo advierte la propia descripción de
+  #   fonts.fontconfig.defaultFonts.emoji), así que para que el monochrome sea el
+  #   que se usa hay que NO instalar el de color. Efecto secundario: los emoji
+  #   salen en monocromo, no en color.
+  #
+  #   Para recuperar los emoji en color hay que volver a añadir
+  #   noto-fonts-color-emoji a la lista; entonces los glifos pequeños de la barra
+  #   vuelven a salirse, y la alternativa sería cambiar el glifo del clima por uno
+  #   de Nerd Font (ver dotfiles/waybar-weather/config.toml, use_css_icon).
   fonts.packages = with pkgs; [
     nerd-fonts.fantasque-sans-mono
     nerd-fonts.jetbrains-mono
-    noto-fonts-color-emoji
+    font-awesome_6
+    noto-fonts-monochrome-emoji
   ];
+
+  fonts.fontconfig.defaultFonts.emoji = [ "Noto Emoji" ];
 
 
   # Some programs need SUID wrappers, can be configured further or are

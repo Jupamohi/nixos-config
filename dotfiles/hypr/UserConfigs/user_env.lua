@@ -12,9 +12,15 @@
 -- hl.env("GDK_SCALE", "1")
 -- hl.env("QT_SCALE_FACTOR", "1")
 hl.env("WEATHER_UNITS", "metric")
-hl.env("HYPRCURSOR_THEME", "macOS-hypr")
+
+-- Cursor. WhiteSur-cursors es el tema estilo macOS que aplica Plasma
+-- (modules/home/plasma.nix) y el que instala home.pointerCursor. Antes se
+-- exportaba XCURSOR_THEME=macOS / HYPRCURSOR_THEME=macOS-hypr, nombres que
+-- no existen en el sistema: GTK y Qt caian al cursor por defecto sobre las
+-- ventanas, mientras el escritorio y Waybar si mostraban el tema.
+hl.env("HYPRCURSOR_THEME", "WhiteSur-cursors")
 hl.env("HYPRCURSOR_SIZE", "24")
-hl.env("XCURSOR_THEME", "macOS")
+hl.env("XCURSOR_THEME", "WhiteSur-cursors")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")

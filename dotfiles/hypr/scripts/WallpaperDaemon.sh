@@ -44,16 +44,24 @@ wait_for_monitors() {
 }
 
 default_wallpaper_path() {
-  local pictures_dir wall_dir
+  local pictures_dir wall_dir repo_dir
   pictures_dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")"
   wall_dir="$pictures_dir/wallpapers"
+  # Respaldo: los wallpapers versionados del repo.
+  repo_dir="$HOME/nixos-config/dotfiles/wallpapers"
 
-  [ -d "$wall_dir" ] || return 1
+  local dir
+  for dir in "$wall_dir" "$repo_dir"; do
+    [ -d "$dir" ] || continue
+    local found
+    found="$(find -L "$dir" -type f \( \
+      -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" -o \
+      -iname "*.gif" -o -iname "*.webp" -o -iname "*.tiff" \
+    \) -print | LC_ALL=C sort | awk 'NR == 1 {print; exit}')"
+    [ -n "$found" ] && { printf '%s\n' "$found"; return 0; }
+  done
 
-  find -L "$wall_dir" -type f \( \
-    -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" -o \
-    -iname "*.gif" -o -iname "*.webp" -o -iname "*.tiff" \
-  \) -print | LC_ALL=C sort | awk 'NR == 1 {print; exit}'
+  return 1
 }
 
 apply_wallpaper_for_monitor() {

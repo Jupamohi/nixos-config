@@ -11,6 +11,26 @@
 terminal=kitty
 PICTURES_DIR="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")"
 wallDIR="$PICTURES_DIR/wallpapers"
+repo_walls="$HOME/nixos-config/dotfiles/wallpapers"
+# Respaldo del repo: los wallpapers versionados viven ahi. Si el usuario no
+# tiene ~/Pictures/wallpapers (la carpeta no existe todavia), se usa esa ruta
+# en lugar de fallar con el fondo en negro. Además, si la carpeta de Pictures
+# existe pero está vacía, también se usa el fallback del repo.
+if [[ ! -d "$wallDIR" ]]; then
+  if [[ -d "$repo_walls" ]]; then
+    wallDIR="$repo_walls"
+  fi
+else
+  # La carpeta existe, pero puede estar vacía de imágenes.
+  if ! find -L "$wallDIR" -maxdepth 2 -type f \( \
+       -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" -o \
+       -iname "*.gif" -o -iname "*.webp" -o -iname "*.tiff" \
+     \) 2>/dev/null | read -r _dummy; then
+    if [[ -d "$repo_walls" ]]; then
+      wallDIR="$repo_walls"
+    fi
+  fi
+fi
 SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
 # shellcheck source=/dev/null
 . "$SCRIPTSDIR/WallpaperCmd.sh"
@@ -77,6 +97,15 @@ mapfile -d '' PICS < <(find -L "${wallDIR}" -type f \( \
   -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o \
   -iname "*.bmp" -o -iname "*.tiff" -o -iname "*.webp" -o \
   -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.mov" -o -iname "*.webm" \) -print0)
+
+# Si no hay wallpapers, "RANDOM % 0" aborta el script con "division by 0" y
+# el menu de rofi nunca llega a abrirse, que es como se manifiesta el atajo
+# SUPER+W roto. Avisamos y salimos limpiamente.
+if [[ "${#PICS[@]}" -eq 0 ]]; then
+  notify-send -i "$iDIR/error.png" "Wallpaper" \
+    "No hay wallpapers en $wallDIR"
+  exit 1
+fi
 
 RANDOM_PIC="${PICS[$((RANDOM % ${#PICS[@]}))]}"
 RANDOM_PIC_NAME="$(basename "$RANDOM_PIC")"

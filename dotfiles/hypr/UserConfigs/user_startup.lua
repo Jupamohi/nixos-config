@@ -92,7 +92,11 @@ local startup_commands = {
   -- "blueman-applet",
   -- "kdeconnect-app",
   -- "blueman-applet",  
-  "hyprctl setcursor macOS-hypr 24",
+  -- El tema debe coincidir con XCURSOR_THEME en user_env.lua y con
+  -- home.pointerCursor en modules/home/hyprland.nix. Antes era
+  -- "macOS-hypr", un nombre inexistente: hyprctl devolvia "ok" sin cambiar
+  -- nada, dejando el compositor con su cursor por defecto.
+  "hyprctl setcursor WhiteSur-cursors 24",
 }
 
 local function run_startup_commands()
