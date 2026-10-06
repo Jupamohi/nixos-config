@@ -44,6 +44,7 @@
     waybar
     rofi
     swaynotificationcenter
+	bc
 
     # KoolDots extras
     wallust
