@@ -104,6 +104,11 @@ in
     quodlibet
 
     # Virtualización
+	podman
+	podman-compose
+	freerdp
+	python3
+	python313Packages.pyside6
 
     # Utilidades
     qalculate-gtk
