@@ -112,6 +112,7 @@ in
     yad
     espanso
     tlp
+	libreoffice-qt
 
     # Fuentes
     fira-code
