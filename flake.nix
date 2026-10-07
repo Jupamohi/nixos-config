@@ -12,13 +12,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+	zen-browser = {
+      url = "github:youwen5/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
   }; 
 
-  outputs = { self, nixpkgs, home-manager, plasma-manager, ... }:
+    outputs = inputs@{ self, nixpkgs, home-manager, plasma-manager, ... }:
     let
       system = "x86_64-linux";
       mkHost = hardwareFile: nixpkgs.lib.nixosSystem {
         inherit system;
+		specialArgs = { inherit inputs; };
         modules = [
           ./configuration.nix
           hardwareFile

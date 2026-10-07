@@ -3,7 +3,7 @@
 /*  As stated on title, best style for vertical layout waybar config */
 
 * {
-  font-family: "JetBrainsMono Nerd Font";
+  font-family: "JetBrainsMono Nerd Font", "Symbols Nerd Font", "Font Awesome 6 Free", "Noto Emoji", sans-serif;
   font-weight: bold;
   min-height: 0;
   font-size: 99%;
@@ -18,9 +18,12 @@ window#waybar {
   font-size: 14px;
 }
 
+window#waybar.hidden {
+  opacity: 0.5;
+}
+
 tooltip {
   background: @base;
-  opacity: 1;
   border-radius: 10px;
   border-width: 2px;
   border-style: solid;
@@ -29,95 +32,46 @@ tooltip {
 
 tooltip label {
   color: @text;
-  font-size: 14px;
+  font-weight: bold;
 }
 
-#taskbar button,
 #workspaces button {
-  color: @text;
-  background-color: transparent;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-right: 6px;
+  color: @surface2;
+  box-shadow: none;
+  text-shadow: none;
+  padding: 0px;
+  border-radius: 9px;
   padding-left: 4px;
+  padding-right: 4px;
+  animation: gradient_f 20s ease-in infinite;
+  transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
 }
 
-#taskbar button.active,
 #workspaces button.active {
-  color: @text;
-}
-
-#workspaces button.focused {
-  color: @text;
-  background: transparent;
+  color: @red;
   border-radius: 15px;
+  padding-left: 8px;
+  padding-right: 8px;
+  animation: gradient_f 20s ease-in infinite;
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
 }
 
-#workspaces button.urgent {
-  /* se mantiene oscuro a propósito: este texto va sobre fondo claro
-     cuando se activa el estado "urgent"; con @text no se vería */
-  color: #11111b;
-  background: transparent;
-  border-radius: 15px;
-}
-
-#taskbar button:hover,
 #workspaces button:hover {
-  background: transparent;
-  color: @text;
+  color: @peach;
   border-radius: 15px;
+  padding-left: 8px;
+  padding-right: 8px;
+  animation: gradient_f 20s ease-in infinite;
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
 }
 
-#backlight,
-#backlight-slider,
-#battery,
-#bluetooth,
-#clock,
 #cpu,
 #disk,
-#idle_inhibitor,
-#keyboard-state,
 #memory,
-#mode,
-#mpris,
-#network,
-#power-profiles-daemon,
-#pulseaudio,
-#pulseaudio-slider,
-#taskbar button,
-#taskbar,
-#temperature,
-#tray,
-#window,
-#wireplumber,
-#workspaces,
-#custom-backlight,
-#custom-nightlight,
-#custom-browser,
-#custom-cava_mviz,
 #custom-cycle_wall,
-#custom-dot_update,
-#custom-file_manager,
-#custom-keybinds,
-#custom-keyboard,
-#custom-light_dark,
-#custom-nightlight,
-#custom-lock,
-#custom-hint,
-#custom-hypridle,
-#custom-hypr_layout,
-#custom-menu,
-#custom-playerctl,
-#custom-power_vertical,
-#custom-power,
-#custom-quit,
-#custom-reboot,
-#custom-settings,
-#custom-spotify,
-#custom-swaync,
-#custom-tty,
 #custom-updater,
-#custom-hyprpicker,
+#custom-vpn_check,
+#custom-lan_check,
 #custom-weather,
 #custom-weather2,
 #custom-weather.clearNight,
@@ -142,7 +96,6 @@ tooltip label {
   border-bottom: 0px solid rgba(0, 0, 0, 0.2);
 }
 
-/*-----Indicators----*/
 #custom-hypridle.notactive,
 #idle_inhibitor.activated {
   color: #39ff14;
@@ -167,8 +120,6 @@ tooltip label {
 }
 
 #battery.critical:not(.charging) {
-  /* se mantiene en rojo a propósito: es la alerta visual de batería
-     crítica, ponerla en @text le quita el valor de aviso */
   color: #f53c3c;
   animation-name: blink;
   animation-duration: 0.5s;
@@ -188,68 +139,56 @@ tooltip label {
 #network {
   background-color: transparent;
   color: @text;
+  padding-right: 10px;
+}
+
+#network.disconnected {
+  color: @red;
+}
+
+#clock {
+  color: @text;
+  font-weight: bold;
+  border-radius: 0px;
+  padding-right: 5px;
+}
+
+#pulseaudio {
+  color: @text;
+  padding-left: 10px;
+  border-radius: 0 0 0 0;
+}
+
+#pulseaudio.microphone {
+  color: @text;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 0 15px 15px 0;
+}
+
+#pulseaudio.muted {
+  color: @red;
+}
+
+#pulseaudio.microphone.source-muted {
+  color: @red;
 }
 
 #backlight {
   color: @text;
+  padding-right: 10px;
+  border-radius: 0 15px 15px 0;
 }
 
-#custom-weather {
+#temperature {
   color: @text;
-  border-radius: 15px;
-  background-color: transparent;
+  border-radius: 0 15px 15px 0;
 }
 
-#custom-menu {
-  color: @text;
+#temperature.critical {
+  color: @red;
 }
 
-#pulseaudio {
-  background-color: transparent;
-  color: @text;
-}
-
-#clock,
-#clock-calender {
-  color: @text;
-}
-
-#custom-dots {
-  color: @text;
-}
-
-#backlight-slider slider,
-#pulseaudio-slider slider {
-  min-height: 7px;
-  min-width: 15px;
-  opacity: 0;
-  background-color: @text;
-  border-radius: 3px;
-  box-shadow: 1px 5px 6px 1px #272727;
-}
-
-#backlight-slider trough,
-#pulseaudio-slider trough {
-  min-height: 100px;
-  min-width: 7px;
-  border-radius: 5px;
-  background-color: @surface0;
-}
-
-window#waybar.bottombar #backlight-slider trough,
-window#waybar.bottombar #pulseaudio-slider trough {
-  min-height: 7px;
-  font-size: 14px;
-}
-
-#backlight-slider highlight,
-#pulseaudio-slider highlight {
-  min-width: 5px;
-  border-radius: 5px;
-  background-color: @blue;
-}
-
-/* --- tray readability override (global) --- */
 #tray > *,
 #tray > .passive,
 #tray > .active,
@@ -272,3 +211,4 @@ window#waybar.bottombar #pulseaudio-slider trough {
   -gtk-icon-effect: none;
   opacity: 1;
 }
+

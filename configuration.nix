@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports =
@@ -185,6 +185,13 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  # zen browser
+  environment.systemPackages = [
+  inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+
+
+
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
   # environment.systemPackages = with pkgs; [     
@@ -203,38 +210,46 @@
 
   # fuentes
   #
-  # Audit de glifos rotos en Waybar (dotfiles/waybar/style.css usa
-  # font-family: "JetBrainsMono Nerd Font"):
+  # Audit de glifos rotos en Waybar (ver dotfiles/waybar/style.css, font-family):
   #
   # - nerd-fonts.jetbrains-mono cubre 199 de los 203 glifos de planos
   #   privados que usan los módulos de Waybar. Los 4 ausentes (U+E6BB,
   #   U+F590, U+F61F, U+F6A9) salen de Font Awesome, no de Nerd Fonts, y solo
-  #   corresponden a iconos de audio-dispositivo y kdeconnect; se añaden con
-  #   font-awesome.v5 más abajo.
+  #   corresponden a iconos de audio-dispositivo y kdeconnect; se cubren con
+  #   font-awesome_6 (líneas de abajo).
   #
-  # - La nube del clima que emite waybar-weather es U+2601 + U+FE0F. JetBrainsMono
-  #   Nerd Font no cubre ni U+2601 ni U+FE0F, así que fontconfig recurría a
-  #   Noto Color Emoji, que es un bitmap CBDT con un único strike de 136px y sin
-  #   contornos: Pango no puede escalarlo a los ~14px de la barra y avisa
-  #   "failed to create cairo scaled font ... Noto Color Emoji 12.999", dejando
-  #   el glifo en blanco.
+  # - El glifo del clima que emite waybar-weather (use_css_icon=false) es un
+  #   emoji del plano U+1F3xx (ej. 🌧️ = U+1F327). JetBrainsMono Nerd Font no lo
+  #   cubre, así que fontconfig recurría a Noto Color Emoji, un bitmap CBDT con
+  #   un único strike de 136px y sin contornos: Pango no puede escalarlo a los
+  #   ~14px de la barra y avisa "failed to create cairo scaled font ... Noto
+  #   Color Emoji 12.999", dejando el glifo en blanco.
   #
   #   Solución: noto-fonts-monochrome-emoji (Noto Emoji) es outline y sí escala.
   #   Fontconfig da prioridad absoluta a las fuentes de emoji en color siempre
   #   que estén instaladas (lo advierte la propia descripción de
-  #   fonts.fontconfig.defaultFonts.emoji), así que para que el monochrome sea el
-  #   que se usa hay que NO instalar el de color. Efecto secundario: los emoji
-  #   salen en monocromo, no en color.
+  #   fonts.fontconfig.defaultFonts.emoji), así que para que el monochrome sea
+  #   el que se usa hay que NO instalar el de color.
   #
-  #   Para recuperar los emoji en color hay que volver a añadir
-  #   noto-fonts-color-emoji a la lista; entonces los glifos pequeños de la barra
-  #   vuelven a salirse, y la alternativa sería cambiar el glifo del clima por uno
-  #   de Nerd Font (ver dotfiles/waybar-weather/config.toml, use_css_icon).
+  #   `fonts.enableDefaultPackages` viene activado por graphical-desktop.nix
+  #   (dependencia de SDDM/Plasma) y su lista incluye noto-fonts-color-emoji.
+  #   Lo desactivamos con mkForce y añadimos explícitamente el resto de
+  #   paquetes por defecto, excepto ese, más los nuestros. Efecto secundario:
+  #   los emoji salen en monocromo, no en color.
+  fonts.enableDefaultPackages = lib.mkForce false;
   fonts.packages = with pkgs; [
     nerd-fonts.fantasque-sans-mono
     nerd-fonts.jetbrains-mono
     font-awesome_6
+    nerd-fonts.symbols-only
     noto-fonts-monochrome-emoji
+    dejavu_fonts
+    freefont_ttf
+    gyre-fonts
+    liberation_ttf
+    unifont
+    noto-fonts-cjk-sans
+    noto-fonts-cjk-serif
   ];
 
   fonts.fontconfig.defaultFonts.emoji = [ "Noto Emoji" ];
