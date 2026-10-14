@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Caelestia shell autostart, written for a Nix install.
+#
+# The AUR copy hardcodes /usr/{bin,lib} and /etc/xdg, which do not exist on
+# NixOS. Everything here is substituted to the package's $out at build time.
+# Kept separate from the systemd unit so a shell started by hand gets the same
+# environment the unit gives it.
+set -euo pipefail
+
+export QML2_IMPORT_PATH="@out@/lib/qt6/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
+export CAELESTIA_LIB_DIR="@out@/lib/caelestia"
+export CAELESTIA_DATA_DIR="@out@/share/caelestia"
+export CAELESTIA_SHELL_CONFIG="@out@/etc/xdg/quickshell/caelestia/shell.qml"
+export CAELESTIA_BIN_DIR="@out@/bin"
+
+# The shell's startup tasks and services call runtime tools *by name* (matugen,
+# python3, notify-send, ...) in the quickshell process's environment, not in the
+# wrapped CLIs'. Put the pinned set the package knows about on PATH so those work
+# on NixOS without requiring the user to install each one system-wide.
+export PATH="@caelestiaRuntimePath@:$PATH"
+
+export QS_NO_RELOAD_POPUP=1
+export QS_DROP_EXPENSIVE_FONTS=1
+export QS_DISABLE_CRASH_HANDLER=1
+export QSG_RENDER_LOOP=threaded
+export QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
+
+# Quickshell imports its Hyprland IPC module even on KDE for API compatibility;
+# the missing-socket warning is expected and silenced here.
+if [[ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+    if [[ -n "${QT_LOGGING_RULES:-}" ]]; then
+        export QT_LOGGING_RULES="${QT_LOGGING_RULES};quickshell.hyprland.ipc.warning=false"
+    else
+        export QT_LOGGING_RULES="quickshell.hyprland.ipc.warning=false"
+    fi
+fi
+
+exec "@quickshell@/bin/quickshell" -n -p "$CAELESTIA_SHELL_CONFIG"

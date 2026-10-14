@@ -29,6 +29,7 @@
           ./configuration.nix
           hardwareFile
           home-manager.nixosModules.home-manager
+          ./caelestia-kde/module.nix
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;

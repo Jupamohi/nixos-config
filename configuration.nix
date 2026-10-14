@@ -50,8 +50,11 @@
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
 
+  # Enable the XFCE desktop environment (sesion X11 ligera).
+  services.xserver.desktopManager.xfce.enable = true;
+
   # ------------------------------------------------------------------
-  # Sesiones visibles en SDDM: solo "hyprland" y "plasma x11"
+  # Sesiones visibles en SDDM: "plasma" (Wayland), "hyprland" y "xfce"
   # ------------------------------------------------------------------
   # services.displayManager.hiddenSessions NO existe en este nixpkgs (26.05):
   # se elimino en favor de services.displayManager.sessionPackages, que es la
@@ -59,19 +62,25 @@
   # ${sessionData.desktops}/share/{xsessions,wayland-sessions}, y ese directorio
   # se construye enlazando los .desktop de cada sessionPackage.
   #
-  # Los dos modulos que anaden sesiones aqui:
+  # Paquetes que aportan sesiones por defecto:
   #   - programs.hyprland -> [ hyprland ]  (aporta hyprland + hyprland-uwsm)
-  #   - plasma6           -> [ plasma-workspace.sessions ] (aporta plasma + plasmax11)
+  #   - plasma6           -> [ plasma-workspace.sessions ] (plasma + plasmax11)
+  #   - xfce              -> paquete "xfce" generado desde desktopManager.session
   #
   # Reemplazamos la lista por paquetes de sesion filtrados que exponen solo los
-  # .desktop que queremos: hyprland (Wayland) y plasmax11 (X11, que SDDM
-  # muestra como "Plasma (X11)"). Así desaparecen "hyprland-uwsm" y
-  # "plasma" (Wayland) sin tocar nada mas del sistema.
+  # .desktop deseados:
+  #   - hyprland -> solo "hyprland" (Wayland); se descarta "hyprland-uwsm"
+  #   - plasma   -> solo "plasma"   (Wayland); se descarta "plasmax11" (X11)
+  #   - xfce     -> solo "xfce"     (X11). pkgs.xfce4-session ya instala
+  #                 share/xsessions/xfce.desktop (Exec=startxfce4) upstream, asi
+  #                 que reutilizamos ese fichero real en lugar de duplicar la
+  #                 generacion de NixOS. startxfce4 esta en el PATH del sistema
+  #                 porque el modulo XFCE anade xfce4-session a systemPackages.
   services.displayManager.sessionPackages = let
     # mkForce es imprescindible: programs.hyprland y plasma6 añaden sus
-    # propios paquetes con lib.mkAfter, así que sin forzar esta definición la
-    # lista quedaría con los 4 paquetes y seguirían apareciendo las sesiones
-    # ocultas.
+    # propios paquetes con lib.mkAfter, y ademas NixOS anade el paquete "xfce"
+    # generado; sin forzar esta definicion la lista quedaria con todas las
+    # sesiones y seguirian apareciendo las no deseadas.
     filtered = lib.mkForce (let
       mkSessionPkg =
       { pkg, keep }:
@@ -100,18 +109,21 @@
         })
         (mkSessionPkg {
           pkg = pkgs.kdePackages.plasma-workspace.sessions;
-          keep = [ "plasmax11" ];
+          keep = [ "plasma" ];
+        })
+        (mkSessionPkg {
+          pkg = pkgs.xfce4-session;
+          keep = [ "xfce" ];
         })
       ]);
   in
   filtered;
 
-  # La sesion por defecto. plasma6.nix pone defaultSession = mkDefault "plasma",
-  # pero "plasma" es precisamente la sesion Wayland que acabamos de ocultar, asi
-  # que hay que sobreescribirla: sin esto el rebuild falla la asercion
-  # "Default graphical session, 'plasma', not found". Se deja Plasma X11 como
-  # sesion por defecto, que es la equivalente mas cercana de lo que pedia Plasma.
-  services.displayManager.defaultSession = "plasmax11";
+  # La sesion por defecto: plasma6.nix ya la deja en "plasma" con mkDefault, y
+  # "plasma" es justo la sesion Wayland que ahora exponemos, asi que la asercion
+  # "Default graphical session, 'plasma', not found" se cumple. Se deja explicito
+  # por claridad (antes apuntaba a "plasmax11", ya no visible).
+  services.displayManager.defaultSession = "plasma";
 
   # habilitar hyprland
   programs.hyprland.enable = true;
@@ -139,6 +151,25 @@
     after = [ "hyprland-session.target" ];
     # Guarda extra: solo arranca dentro de una sesión Hyprland (Wayland).
     unitConfig.ConditionEnvironment = "XDG_CURRENT_DESKTOP=Hyprland";
+  };
+
+  # Shell Caelestia. El empaquetado esta vendorizado dentro de este repo en
+  # ./caelestia-kde (modulo NixOS + packaging/nix + el fuente parcheado del
+  # efecto KWin), y se registra en ./caelestia-kde/module.nix desde flake.nix.
+  # Asi clonar solo nixos-config es suficiente; no hace falta el input flake del
+  # proyecto caelestia-kde.
+  # Disponible en todos los hosts (el modulo se anade en flake.nix a los modules
+  # comunes de mkHost), pero debe arrancar SOLO en la sesion Plasma (Wayland).
+  programs.caelestia-kde.enable = true;
+
+  # El modulo caelestia-kde ata el servicio a graphical-session.target, que SDDM
+  # activa en las tres sesiones (Plasma, XFCE, Hyprland). Anadimos la misma
+  # guarda de entorno que hyprpolkitagent para que se omita fuera de Plasma:
+  # plasma.desktop declara DesktopNames=KDE y SDDM exporta
+  # XDG_CURRENT_DESKTOP=KDE en Plasma Wayland; en XFCE el valor es XFCE y en
+  # Hyprland es Hyprland, de modo que el servicio no arranca alli.
+  systemd.user.services.caelestia-shell = {
+    unitConfig.ConditionEnvironment = "XDG_CURRENT_DESKTOP=KDE";
   };
 
   # Configure keymap in X11
