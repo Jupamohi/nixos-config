@@ -12,6 +12,12 @@
       kwin.ClearLastMouseMark = "Meta+Shift+F12";
       kwin.ClearMouseMarks = "Meta+Shift+F11";
       org_kde_powerdevil.powerProfile = "Battery";
+      # Free the bare Meta (Super) key. Plasma's launcher defaults to Meta, so it
+      # grabs Super before the Caelestia shell can register its own launcher
+      # binding (Meta+Space and Meta, see ~/.config/caelestia/keybinds.json).
+      # Moving the Plasma launcher to its alternate default (Alt+F1) lets Super
+      # open the Caelestia launcher instead.
+      "plasmashell"."activate application launcher" = "Alt+F1";
     };
 
 	workspace = {
@@ -24,42 +30,60 @@
       wallpaper = "/home/jupamohi/nixos-config/dotfiles/wallpapers/windows-11-dark-mode-abstract-background-black-background-7680x4320-8710.png";
     };
 
-	panels = [
-  {
-    location = "top";
-    height = 44;
-	opacity = "opaque";
-    floating = true;
-    hiding = "none";
-    widgets = [
-      {
-        name = "org.kde.plasma.kickoff";
-        config.General = {
-          icon = "distributor-logo-nixos";
-          useCustomButtonImage = true;
-        };
-      }
-      "org.kde.plasma.marginsseparator"
-      "org.kde.plasma.minimizeall"
-      "org.kde.plasma.marginsseparator"
-      {
-        name = "org.kde.plasma.icontasks";
-        config.General.launchers = "";
-      }
-      "org.kde.plasma.panelspacer"
-      {
-        name = "org.kde.plasma.digitalclock";
-        config.Appearance = {
-          dateFormat = "longDate";
-          showDate = false;
-          showSeconds = "Never";
-        };
-      }
-      "org.kde.plasma.panelspacer"
-      "org.kde.plasma.systemtray"
-    ];
-  }
-];
+    # The Caelestia shell draws its own bar (a Quickshell layer-shell surface at
+    # the bottom), so a Plasma panel would duplicate it. The original panel is
+    # kept commented below as the recovery path: uncomment `panels` and drop the
+    # `caelestia-remove-plasma-panel` desktopScript to get it back. It also lives
+    # in git history.
+    #
+    # `programs.plasma.panels` only emits its panel script when non-empty, so an
+    # empty list would leave the panel from the previous generation in place.
+    # The desktopScript below runs after plasma-manager's own script (priority 2)
+    # and removes any leftover panel, so only Caelestia's bar is shown.
+    #
+    # panels = [
+    #   {
+    #     location = "top";
+    #     height = 44;
+    #     opacity = "opaque";
+    #     floating = true;
+    #     hiding = "none";
+    #     widgets = [
+    #       {
+    #         name = "org.kde.plasma.kickoff";
+    #         config.General = {
+    #           icon = "distributor-logo-nixos";
+    #           useCustomButtonImage = true;
+    #         };
+    #       }
+    #       "org.kde.plasma.marginsseparator"
+    #       "org.kde.plasma.minimizeall"
+    #       "org.kde.plasma.marginsseparator"
+    #       {
+    #         name = "org.kde.plasma.icontasks";
+    #         config.General.launchers = "";
+    #       }
+    #       "org.kde.plasma.panelspacer"
+    #       {
+    #         name = "org.kde.plasma.digitalclock";
+    #         config.Appearance = {
+    #           dateFormat = "longDate";
+    #           showDate = false;
+    #           showSeconds = "Never";
+    #         };
+    #       }
+    #       "org.kde.plasma.panelspacer"
+    #       "org.kde.plasma.systemtray"
+    #     ];
+    #   }
+    # ];
+    startup.desktopScript.caelestia-remove-plasma-panel = {
+      priority = 3;
+      runAlways = true;
+      text = ''
+        panels().forEach((panel) => panel.remove());
+      '';
+    };
 
     configFile = {
 	  kdeglobals.KDE.AutomaticLookAndFeel = false;

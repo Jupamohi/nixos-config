@@ -86,6 +86,15 @@ in
     environment.variables = sessionEnv;
     environment.sessionVariables = sessionEnv;
 
+    # Hard runtime deps of the shell's typography. The plugin defaults the icon
+    # style to the family "Material Symbols Rounded" (appearanceconfig.hpp) and
+    # the clock/workspaces fonts to "Rubik". Without them installed, Qt silently
+    # falls back and glyph names ("chevron_right", "widgets", …) render as text.
+    fonts.packages = [
+      pkgs.material-symbols
+      pkgs.rubik
+    ];
+
     systemd.user.services.caelestia-shell = lib.mkIf cfg.autostart {
       description = "Caelestia Shell";
       documentation = [ "https://github.com/ladybug-me/caelestia-kde" ];
