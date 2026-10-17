@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<labwc_config>
+
+  <windowSwitcher preview="yes" outlines="yes" unshade="yes">
+    <osd show="yes" style="thumbnail" output="all" thumbnailLabelFormat="%T" />
+  </windowSwitcher>
+
+  <keyboard>
+    <default />
+    <numlock>on</numlock>
+    <repeatRate>35</repeatRate>
+    <repeatDelay>300</repeatDelay>
+
+    <!-- Aplicaciones -->
+    <keybind key="W-Return">
+      <action name="Execute" command="kitty"/>
+    </keybind>
+    <keybind key="W-b">
+      <action name="Execute" command="/home/jupamohi/.local/bin/abrir-navegador"/>
+    </keybind>
+    <keybind key="W-v">
+      <action name="Execute" command="virt-manager"/>
+    </keybind>
+
+    <!-- DMS -->
+    <keybind key="W-C-b">
+      <action name="Execute" command="dms ipc call bar toggle index 0"/>
+    </keybind>
+    <keybind key="W-space">
+      <action name="Execute" command="dms ipc call spotlight toggle"/>
+    </keybind>
+    <keybind key="W-comma">
+      <action name="Execute" command="dms ipc call settings focusOrToggle"/>
+    </keybind>
+
+    <!-- Captura de pantalla -->
+    <keybind key="W-S-s">
+      <action name="Execute" command="/home/jupamohi/.local/bin/captura"/>
+    </keybind>
+
+    <!-- Teclas multimedia -->
+    <keybind key="XF86AudioPlay">
+      <action name="Execute" command="playerctl play-pause"/>
+    </keybind>
+    <keybind key="XF86AudioNext">
+      <action name="Execute" command="playerctl next"/>
+    </keybind>
+    <keybind key="XF86AudioPrev">
+      <action name="Execute" command="playerctl previous"/>
+    </keybind>
+  </keyboard>
+
+</labwc_config>

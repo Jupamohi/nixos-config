@@ -103,6 +103,10 @@
         '';
       in
       [
+	    (mkSessionPkg {
+          pkg = pkgs.labwc;
+          keep = [ "labwc" ];
+        })
         (mkSessionPkg {
           pkg = pkgs.hyprland;
           keep = [ "hyprland" ];
