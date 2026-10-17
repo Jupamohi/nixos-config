@@ -71,6 +71,15 @@ let
     # org.kde.keyboard over D-Bus; these tools are invoked by name from QML.
     libxml2.bin
     qdbus6
+    # globalshortcut.cpp (KDE port) releases a shortcut it conflicts with by
+    # spawning `gdbus org.kde.KGlobalAccel.setShortcutKeys` before claiming the
+    # key, and uses it again for crash recovery. On Arch gdbus lives in /usr/bin
+    # (glib is a base package), so upstream's runtime list never named it; on
+    # NixOS the shell PATH is only this list, so the release silently failed and
+    # every conflicting key (Meta+V, Meta+B, Meta+Tab, Meta+1..9, ...) stayed
+    # owned by Plasma/KWin with Caelestia's own entry left empty. glib's default
+    # output ships bin/gdbus.
+    glib
   ];
   runtimePath = lib.makeBinPath runtimeDeps;
 

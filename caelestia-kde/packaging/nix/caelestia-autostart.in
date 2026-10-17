@@ -17,7 +17,15 @@ export CAELESTIA_BIN_DIR="@out@/bin"
 # python3, notify-send, ...) in the quickshell process's environment, not in the
 # wrapped CLIs'. Put the pinned set the package knows about on PATH so those work
 # on NixOS without requiring the user to install each one system-wide.
-export PATH="@caelestiaRuntimePath@:$PATH"
+#
+# Apps the shell launches are resolved by their bare Exec name from .desktop
+# files ("firefox", "dolphin", "kate", ...). NixOS starts systemd *user
+# services* with a minimal PATH (coreutils/findutils/gnugrep/gnused/systemd)
+# that does NOT include the system or user profiles, so those names never
+# resolve and the apps silently fail to open. Append the standard Nix profile
+# bin dirs so launching apps works whether the shell is started by the unit or
+# by hand.
+export PATH="@caelestiaRuntimePath@:/run/wrappers/bin:${HOME}/.nix-profile/bin:/etc/profiles/per-user/${USER}/bin:/run/current-system/sw/bin:$PATH"
 
 export QS_NO_RELOAD_POPUP=1
 export QS_DROP_EXPENSIVE_FONTS=1
