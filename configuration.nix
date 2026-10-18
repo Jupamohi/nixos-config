@@ -41,6 +41,9 @@
     LC_TELEPHONE = "es_CO.UTF-8";
     LC_TIME = "es_CO.UTF-8";
   };
+ 
+  # resolucion 1920x180 para las VMs
+  boot.kernelParams = [ "video=Virtual-1:1920x1080@60" ];
 
   # Enable the X11 windowing system.
   # You can disable this if you're only using the Wayland session.

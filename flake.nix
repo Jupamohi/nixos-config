@@ -34,6 +34,7 @@
           hardwareFile
           home-manager.nixosModules.home-manager
           ./caelestia-kde/module.nix
+		  ./modules/nixos/sddm-caelestia.nix
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;

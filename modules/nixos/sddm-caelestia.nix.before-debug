@@ -1,0 +1,143 @@
+{ pkgs, lib, ... }:
+let
+  caelestia-sddm = pkgs.stdenvNoCC.mkDerivation {
+    pname = "caelestia-sddm-locklike";
+    version = "git";
+    nativeBuildInputs = [ pkgs.python3 ];
+    src = pkgs.fetchFromGitHub {
+      owner = "ItsABigIgloo";
+      repo = "caelestia-sddm";
+      rev = "dd69abbb7eb122546cbabe84e116ba03e67a4ccc";            # mejor fijar un commit (ver abajo)
+      hash = "sha256-xvTdX1tthiL7lHoODlGz4pbuSvhPa7LZHmFgxeIIO94=";
+    };
+    dontBuild = true;
+    postPatch = ''
+      substituteInPlace themes/locklike/theme.conf \
+        --replace-fail "sessionPicker=false" "sessionPicker=true" \
+        --replace-fail "enableWelcomeMessage=true" "enableWelcomeMessage=false"
+
+      python3 << 'PY'
+from pathlib import Path
+p = Path("themes/locklike/components/SessionPicker.qml")
+src = p.read_text()
+m = "    Rectangle {\n        id: labelRect"
+ui = src[src.find(m):] if m in src else src[src.find("    Rectangle {"):] if "    Rectangle {" in src else ""
+qml = """pragma ComponentBehavior: Bound
+import QtQuick
+
+Item {
+    id: root
+
+    property bool expanded: false
+    property int count: sessionModel ? sessionModel.count : 0
+    property var items: []
+    property int selectedIndex: sessionModel && sessionModel.count > 0
+        ? Math.max(0, Math.min(sessionModel.lastIndex, sessionModel.count - 1))
+        : 0
+    property string currentText
+
+    width: labelRect.width + expandBtn.width
+    height: 40
+    opacity: root.count > 0 ? 1 : 0
+    enabled: root.count > 0
+
+    Instantiator {
+        id: sessionArray
+        model: sessionModel
+        property var sessions: []
+
+        delegate: Item {
+            required property int index
+            required property var model
+
+            Component.onCompleted: {
+                if (index >= 0 && index < sessionModel.count) {
+                    sessionArray.sessions[index] = { index: index, name: model.name }
+                    root.rebuildFromSessions()
+                }
+            }
+        }
+    }
+
+    function rebuildFromSessions() {
+        const arr = []
+        const sArr = sessionArray.sessions
+        for (let i = 0; i < sArr.length; i++) {
+            const s = sArr[i]
+            arr.push(s && s.name ? s.name : "")
+        }
+        root.items = arr
+        root.syncCurrentText()
+    }
+
+    function syncCurrentText() {
+        const sArr = sessionArray.sessions
+        if (root.selectedIndex >= 0 && root.selectedIndex < sArr.length) {
+            const s = sArr[root.selectedIndex]
+            if (s && s.name) {
+                root.currentText = s.name
+            }
+        }
+    }
+
+    onSelectedIndexChanged: {
+        root.syncCurrentText()
+    }
+
+    onCountChanged: {
+        if (root.count > 0 && (root.selectedIndex < 0 || root.selectedIndex >= root.count)) {
+            root.selectedIndex = sessionModel && sessionModel.count > 0
+                ? Math.max(0, Math.min(sessionModel.lastIndex, sessionModel.count - 1))
+                : 0
+        }
+        root.rebuildFromSessions()
+    }
+
+    Component.onCompleted: {
+        root.rebuildFromSessions()
+        root.syncCurrentText()
+    }
+}
+"""
+p.write_text(qml + "\n\n" + ui)
+PY
+
+      python3 << 'PY'
+from pathlib import Path
+p = Path("themes/locklike/Main.qml")
+s = p.read_text()
+lines = s.splitlines(keepends=True)
+remove = (
+    "currentText: sessionPickerBtn.items.length > 0 ? sessionPickerBtn.items[0] : ",
+    "selectedIndex: 0",
+)
+matches = []
+for i, line in enumerate(lines):
+    if any(line.strip().startswith(x) for x in remove):
+        matches.append(i)
+if len(matches) != 2:
+    raise SystemExit("Se esperaban 2 propiedades y se encontraron %d" % len(matches))
+for i in reversed(matches):
+    lines.pop(i)
+p.write_text("".join(lines))
+PY
+    '';
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/share/sddm/themes
+      cp -r themes/locklike $out/share/sddm/themes/caelestia-locklike
+      runHook postInstall
+    '';
+  };
+in
+{
+  environment.systemPackages = [ caelestia-sddm ];
+
+  services.displayManager.sddm = {
+    theme = "caelestia-locklike";
+    extraPackages = with pkgs.kdePackages; [ qtdeclarative qt5compat qtsvg qtmultimedia ];
+    settings.General.GreeterEnvironment = "QT_WAYLAND_SHELL_INTEGRATION=layer-shell,QML_XHR_ALLOW_FILE_READ=1";
+  };
+
+  fonts.packages = with pkgs; [ material-symbols rubik roboto nerd-fonts.caskaydia-cove ];
+}

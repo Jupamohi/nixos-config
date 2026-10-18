@@ -3,6 +3,7 @@ alias ls="eza --icons=auto --git"
 alias nrsl="sudo nixos-rebuild switch --flake ~/nixos-config#laptopVM"
 alias nrsm="sudo nixos-rebuild switch --flake ~/nixos-config#maicolVM"
 alias cat="bat --paging=never"
+alias el="echo '********************************************************************************************************************************************************'"
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
