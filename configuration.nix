@@ -250,6 +250,23 @@
   # habilitar los flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # limitar el menu de arranque
+  boot.loader.systemd-boot.configurationLimit = 5;
+
+  # borrar generaciones 
+  # --keep 3 conserva como mínimo las últimas 3 generaciones.
+  # --keep-since 7d conserva además todo lo de la última semana. Si hiciste muchos cambios seguidos, no te quedas con solo tres.
+  programs.nh = {
+    enable = true;
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep 3 --keep-since 7d";
+    };
+  };
+
+  nix.optimise.automatic = true;   # deduplica el store con hard links
+
   # fuentes
   #
   # Audit de glifos rotos en Waybar (ver dotfiles/waybar/style.css, font-family):
