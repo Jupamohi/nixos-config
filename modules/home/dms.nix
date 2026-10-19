@@ -7,6 +7,8 @@
     enableSystemMonitoring = true;
     enableDynamicTheming = true;
     enableAudioWavelength = true;
+
+    settings = builtins.fromJSON (builtins.readFile ../../dotfiles/dms/settings.json);
   };
 
   wayland.windowManager.labwc = {

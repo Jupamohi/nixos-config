@@ -38,6 +38,8 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+			home-manager.backupFileExtension = "backup";
+			home-manager.overwriteBackup = true;
             home-manager.sharedModules = [
               plasma-manager.homeModules.plasma-manager
               inputs.dms.homeModules.dank-material-shell

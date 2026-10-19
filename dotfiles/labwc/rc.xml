@@ -48,6 +48,18 @@
     <keybind key="XF86AudioPrev">
       <action name="Execute" command="playerctl previous"/>
     </keybind>
+
+    <!-- Mosaico: mitades de pantalla -->
+    <keybind key="W-Left"><action name="SnapToEdge" direction="left" /></keybind>
+    <keybind key="W-Right"><action name="SnapToEdge" direction="right" /></keybind>
+    <!-- Maximizar / restaurar -->
+    <keybind key="W-Up"><action name="ToggleMaximize" /></keybind>
+    <keybind key="W-Down"><action name="UnMaximize" /></keybind>
+    <!-- Esquinas (cuartos): Super+Shift+flecha -->
+    <keybind key="W-S-Left"><action name="SnapToEdge" direction="up-left" /></keybind>
+    <keybind key="W-S-Right"><action name="SnapToEdge" direction="up-right" /></keybind>
+    <keybind key="W-S-Down"><action name="SnapToEdge" direction="down-left" /></keybind>
+
   </keyboard>
 
 </labwc_config>
