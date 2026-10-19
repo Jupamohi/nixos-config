@@ -26,16 +26,17 @@
     outputs = inputs@{ self, nixpkgs, home-manager, plasma-manager, ... }:
     let
       system = "x86_64-linux";
-      mkHost = hardwareFile: nixpkgs.lib.nixosSystem {
+
+      mkHost = hardwareFile: extraModules: nixpkgs.lib.nixosSystem {
         inherit system;
-		specialArgs = { inherit inputs; };
+        specialArgs = { inherit inputs; };
         modules = [
           ./configuration.nix
           hardwareFile
           home-manager.nixosModules.home-manager
           ./caelestia-kde/module.nix
-		  ./modules/nixos/sddm-caelestia.nix
-		  ./modules/nixos/linoffice.nix
+          ./modules/nixos/sddm-caelestia.nix
+          ./modules/nixos/linoffice.nix
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
@@ -47,12 +48,12 @@
             ];
             home-manager.users.jupamohi = import ./home.nix;
           }
-        ];
+        ] ++ extraModules;
       };
     in {
       nixosConfigurations = {
-        laptopVM = mkHost ./hosts/hardware-laptopVM/hardware-configuration.nix;
-        maicolVM = mkHost ./hosts/hardware-maicolVM/hardware-configuration.nix;
+        laptopVM = mkHost ./hosts/hardware-laptopVM/hardware-configuration.nix [ ];
+        maicolVM = mkHost ./hosts/hardware-maicolVM/hardware-configuration.nix [ ];
         # NEW_HOST_MARKER
       };
     };
