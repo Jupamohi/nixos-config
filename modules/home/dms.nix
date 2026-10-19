@@ -18,6 +18,10 @@
 
   xdg.configFile."labwc/rc.xml".source = ../../dotfiles/labwc/rc.xml;
 
+  # Avatar del usuario (AccountsService usa ~/.face por defecto; DMS lo lee).
+  home.file.".face".source = ../../assets/icono.png;
+
+
   home.packages = with pkgs; [
     kitty playerctl grim slurp wl-clipboard wev
     gtk3 xdg-utils libnotify
