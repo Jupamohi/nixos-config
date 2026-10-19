@@ -135,6 +135,9 @@
   # habilitar hyprland
   programs.hyprland.enable = true;
 
+  # 32 bits para Heroic Games Launcher
+  hardware.graphics.enable32Bit = true;
+
   # Agente de autenticación polkit para sesiones Hyprland.
   # hyprpolkitagent ya viene en environment.systemPackages (paquetes.nix), pero eso
   # NO instala su unit de usuario. hace falta:

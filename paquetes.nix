@@ -103,12 +103,6 @@ in
     # Multimedia
     quodlibet
 
-    # Virtualización
-	podman
-	podman-compose
-	freerdp
-	python3
-	python313Packages.pyside6
 
     # Utilidades
     qalculate-gtk
@@ -118,6 +112,7 @@ in
     espanso
     tlp
 	libreoffice-qt
+	heroic
 
     # Fuentes
     fira-code
