@@ -54,6 +54,7 @@
       nixosConfigurations = {
         laptopVM = mkHost ./hosts/hardware-laptopVM/hardware-configuration.nix [ ];
         maicolVM = mkHost ./hosts/hardware-maicolVM/hardware-configuration.nix [ ];
+		nitro = mkHost ./hosts/hardware-nitro/hardware-configuration.nix [ ./hosts/hardware-nitro/nitro.nix ];
         # NEW_HOST_MARKER
       };
     };
