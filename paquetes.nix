@@ -113,6 +113,7 @@ in
     tlp
 	libreoffice-qt
 	heroic
+    efibootmgr
 
     # Fuentes
     fira-code
