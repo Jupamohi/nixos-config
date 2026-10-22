@@ -43,6 +43,7 @@ in
 	obsidian
 	mysql-workbench
 	mysql84
+	pgadmin4-desktopmode
 
     # Terminal / shell
     zsh
@@ -62,6 +63,7 @@ in
     zsh-autosuggestions
     zsh-syntax-highlighting
     zsh-powerlevel10k
+	postgresql
 
     # Hyprland y ecosistema
     hyprland
@@ -114,6 +116,7 @@ in
 	libreoffice-qt
 	heroic
     efibootmgr
+    evtest
 
     # Fuentes
     fira-code

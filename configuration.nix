@@ -239,7 +239,7 @@
   # environment.systemPackages = with pkgs; [     
   # ];
 
-#*************************** Aqui pongo mis servicios************************************#
+#*************************** aqui pongo mis servicios************************************#
   # portapapeles entre VM y HOST
   services.spice-vdagentd.enable = true;
 
@@ -266,6 +266,30 @@
   };
 
   nix.optimise.automatic = true;   # deduplica el store con hard links
+
+  # cosas para el control
+  hardware.uinput.enable = true;  
+  hardware.steam-hardware.enable = true;
+
+  services.postgresql = {
+    enable = true;
+    package = pkgs.postgresql;
+    enableTCPIP = true; # pgAdmin desktop normalmente conecta por localhost:5432
+  };
+
+  # El módulo inicia PostgreSQL mediante este target al arrancar.
+  # Quitar wantedBy evita el arranque automático.
+  systemd.targets.postgresql.wantedBy = lib.mkForce [ ];
+
+  # Evita también el inicio automático de pgAdmin.
+  systemd.services.pgadmin.wantedBy = lib.mkForce [ ];
+
+  services.udev.packages = [ pkgs.game-devices-udev-rules ];
+
+  services.udev.extraRules = ''
+    SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="*Motion Sensors", ENV{ID_INPUT_JOYSTICK}="0", ENV{ID_INPUT_ACCELEROMETER}="0", GROUP="root", MODE="0600"
+  '';
+
 
   # fuentes
   #
