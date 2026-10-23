@@ -34,6 +34,7 @@ in
     # Navegadores / comunicación
     brave
     discord
+	whatsie
     localsend
 
     # Editores / desarrollo
