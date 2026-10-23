@@ -300,7 +300,7 @@
     };
 
   # adjuntar archivos en whatsie
-  programs.dconf.enable = true;
+  environment.sessionVariables.QT_QPA_PLATFORMTHEME = "xdgdesktopportal";
 
 
   # fuentes

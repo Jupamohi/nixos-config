@@ -66,6 +66,7 @@ in
     zsh-syntax-highlighting
     zsh-powerlevel10k
 	postgresql
+	flatpak
 
     # Hyprland y ecosistema
     hyprland
@@ -130,8 +131,6 @@ in
     kdePackages.qt6ct
     libsForQt5.qtstyleplugin-kvantum
     gtk-engine-murrine
-    gtk3
-    gsettings-desktop-schemas
 
 	# Theming MacOS
     whitesur-gtk-theme
