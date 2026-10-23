@@ -290,6 +290,18 @@
     SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="*Motion Sensors", ENV{ID_INPUT_JOYSTICK}="0", ENV{ID_INPUT_ACCELEROMETER}="0", GROUP="root", MODE="0600"
   '';
 
+  # compartir pantalla
+  xdg.portal = {
+      enable = true;
+      wlr.enable = true;
+      extraPortals = [
+        pkgs.xdg-desktop-portal-gtk
+      ];
+    };
+
+  # adjuntar archivos en whatsie
+  programs.dconf.enable = true;
+
 
   # fuentes
   #

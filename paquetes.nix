@@ -36,6 +36,7 @@ in
     discord
 	whatsie
     localsend
+	teams-for-linux
 
     # Editores / desarrollo
     vscode
@@ -129,6 +130,8 @@ in
     kdePackages.qt6ct
     libsForQt5.qtstyleplugin-kvantum
     gtk-engine-murrine
+    gtk3
+    gsettings-desktop-schemas
 
 	# Theming MacOS
     whitesur-gtk-theme
