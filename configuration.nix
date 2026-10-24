@@ -214,7 +214,7 @@
   users.users."jupamohi" = {
     isNormalUser = true;
     description = "Juan Pablo Mosquera Hinestroza";
-    extraGroups = [ "networkmanager" "wheel" "input" ];
+    extraGroups = [ "networkmanager" "wheel" "input" "libvirtd" "kvm" ];
     packages = with pkgs; [
       kdePackages.kate
     #  thunderbird
@@ -301,6 +301,34 @@
 
   # adjuntar archivos en whatsie
   environment.sessionVariables.QT_QPA_PLATFORMTHEME = "xdgdesktopportal";
+
+  # habilitar flatpak
+  services.flatpak.enable = true;
+
+  # libvirt + QEMU/KVM
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;   # solo la arquitectura del host, más ligero
+      runAsRoot = true;
+      swtpm.enable = true;       # TPM emulado (necesario para Windows 11)
+    };
+  };
+
+  # Interfaz gráfica
+  programs.virt-manager.enable = true;
+
+  # Opcional: portapapeles compartido y USB redirect en las VMs
+  virtualisation.spiceUSBRedirection.enable = true;
+
+
+
+
+
+
+
+
+
 
 
   # fuentes
