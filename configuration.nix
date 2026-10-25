@@ -321,6 +321,11 @@
   # Opcional: portapapeles compartido y USB redirect en las VMs
   virtualisation.spiceUSBRedirection.enable = true;
 
+  # bluetooth
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = false;
+  };
 
 
 

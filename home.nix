@@ -16,6 +16,10 @@
 
   xdg.configFile."nvim/init.lua".source = ./dotfiles/nvim/init.lua;
   xdg.configFile."kitty".source = ./dotfiles/kitty;
+  xdg.configFile."systemd/user/plasma-xdg-desktop-portal-kde.service.d/override.conf".text = ''
+    [Unit]
+    AssertEnvironment=XDG_CURRENT_DESKTOP=*KDE*
+  '';
   # KoolDots Hyprland (Lua)
   modules.home.hyprland.enable = true;
 }
