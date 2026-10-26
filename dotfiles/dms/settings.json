@@ -23,6 +23,10 @@
     "theme": "System Default"
   },
   "launcherLogoMode": "os",
+  "acSuspendTimeout": 1800,
+  "acProfileName": "2",
+  "acPostLockMonitorTimeout": 30,
+  "batteryProfileName": "1",
   "osdPowerProfileEnabled": true,
   "barConfigs": [
     {
