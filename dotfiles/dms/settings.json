@@ -87,7 +87,11 @@
         "memUsage",
         "notificationButton",
         "battery",
-        "controlCenterButton",
+        {
+          "id": "controlCenterButton",
+          "enabled": true,
+          "showBrightnessIcon": true
+        },
         {
           "enabled": true,
           "id": "powerMenuButton"
