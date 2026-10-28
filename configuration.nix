@@ -327,11 +327,19 @@
     powerOnBoot = false;
   };
 
+  # Overlays para ampliar el cursor al agitarlo
+  nixpkgs.overlays = [
+    (final: prev: {
+      labwc = prev.labwc.overrideAttrs (old: {
+        patches = (old.patches or []) ++ [ ./patches/labwc-cursor-shake.patch ];
+      });
+    })
+  ];
 
-
-
-
-
+  # keyring para que vs code pueda guardar las contraseñas
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.login.enableGnomeKeyring = true;
+  security.pam.services.greetd.enableGnomeKeyring = true;
 
 
 

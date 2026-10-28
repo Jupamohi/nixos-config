@@ -1,0 +1,637 @@
+diff --git a/docs/labwc-config.5.scd b/docs/labwc-config.5.scd
+index 03d5fc2..85679f4 100644
+--- a/docs/labwc-config.5.scd
++++ b/docs/labwc-config.5.scd
+@@ -1434,6 +1434,30 @@ situation.
+ 	Whether to apply a bilinear filter to the magnified image, or
+ 	just to use nearest-neighbour. Default is true - bilinear filtered.
+ 
++## CURSOR SHAKE
++
++```
++<cursorShake>
++  <enabled>no</enabled>
++  <maxScale>4.0</maxScale>
++</cursorShake>
++```
++
++Enlarge the cursor while the pointer is shaken back and forth, and let it
++shrink back to normal size shortly after the movement stops. The cursor grows
++and shrinks smoothly. The enlarged image is made by scaling the biggest bitmap
++of the cursor theme, so very large sizes may look soft. Cursor images drawn
++by the client itself, such as those of some X11 clients, are not enlarged.
++
++*<cursorShake><enabled>* [yes|no]
++	Whether to enlarge the cursor when the pointer is shaken. Default is no.
++	When enabled, the cursor theme is loaded a second time at startup,
++	which uses some additional memory.
++
++*<cursorShake><maxScale>*
++	Largest size of the cursor, as a multiple of its normal size. Minimum
++	is 1.0 and values above 20.0 are treated as 20.0. Default is 4.0.
++
+ ## ENVIRONMENT VARIABLES
+ 
+ *XCURSOR_PATH*
+diff --git a/docs/rc.xml.all b/docs/rc.xml.all
+index bc9566f..b9617b5 100644
+--- a/docs/rc.xml.all
++++ b/docs/rc.xml.all
+@@ -688,4 +688,16 @@
+     <useFilter>yes</useFilter>
+   </magnifier>
+ 
++  <!--
++    Cursor shake settings
++    When enabled, the cursor is temporarily enlarged while the pointer is
++    shaken back and forth, which makes it easier to find on screen.
++    'enabled' turns the feature on or off.
++    'maxScale' sets the largest size of the cursor relative to normal.
++  -->
++  <cursorShake>
++    <enabled>no</enabled>
++    <maxScale>4.0</maxScale>
++  </cursorShake>
++
+ </labwc_config>
+diff --git a/include/config/rcxml.h b/include/config/rcxml.h
+index a6f1a7d..433c32b 100644
+--- a/include/config/rcxml.h
++++ b/include/config/rcxml.h
+@@ -209,6 +209,10 @@ struct rcxml {
+ 	float mag_scale;
+ 	float mag_increment;
+ 	bool mag_filter;
++
++	/* Cursor shake (enlarge the cursor when the pointer is shaken) */
++	bool cursor_shake_enabled;
++	float cursor_shake_max_scale;
+ };
+ 
+ extern struct rcxml rc;
+diff --git a/include/input/cursor-shake.h b/include/input/cursor-shake.h
+new file mode 100644
+index 0000000..6ecc735
+--- /dev/null
++++ b/include/input/cursor-shake.h
+@@ -0,0 +1,41 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef LABWC_CURSOR_SHAKE_H
++#define LABWC_CURSOR_SHAKE_H
++
++#include <stdbool.h>
++#include <stdint.h>
++
++/*
++ * Detects a "shake" of the pointer: quick back-and-forth movement.
++ *
++ * This file intentionally does not depend on wlroots or the rest of
++ * labwc so that the detection logic can be tested on its own.
++ */
++
++#define CURSOR_SHAKE_MAX_SAMPLES 256
++
++struct cursor_shake_sample {
++	double x, y;
++	uint32_t time_msec;
++};
++
++struct cursor_shake {
++	struct cursor_shake_sample samples[CURSOR_SHAKE_MAX_SAMPLES];
++	int head;  /* index of the oldest sample */
++	int count;
++};
++
++/** Forget all recorded movement */
++void cursor_shake_reset(struct cursor_shake *shake);
++
++/**
++ * Feed the detector with the new pointer position (layout coordinates).
++ *
++ * Returns true while the recent movement looks like a shake, that is: at
++ * least a few direction reversals within a short time frame, covering a
++ * minimum distance on screen.
++ */
++bool cursor_shake_feed(struct cursor_shake *shake, double x, double y,
++	uint32_t time_msec);
++
++#endif /* LABWC_CURSOR_SHAKE_H */
+diff --git a/include/labwc.h b/include/labwc.h
+index 88860de..0cd415b 100644
+--- a/include/labwc.h
++++ b/include/labwc.h
+@@ -7,6 +7,7 @@
+ #include "common/set.h"
+ #include "cycle.h"
+ #include "input/cursor.h"
++#include "input/cursor-shake.h"
+ #include "overlay.h"
+ 
+ #define XCURSOR_DEFAULT "left_ptr"
+@@ -38,6 +39,26 @@ struct seat {
+ 	bool cursor_visible;
+ 	struct wlr_cursor *cursor;
+ 	struct wlr_xcursor_manager *xcursor_manager;
++	uint32_t cursor_size;
++	/* Shape last requested by the focused client (static string) */
++	const char *client_cursor_shape;
++
++	/* Enlarged cursor while the pointer is shaken, see cursor.c */
++	struct {
++		struct cursor_shake detector;
++		/* Theme with the biggest bitmaps, source of the scaled image */
++		struct wlr_xcursor_manager *source;
++		float scale; /* 1.0 means normal size */
++		/* Image currently shown while enlarged (NULL if normal) */
++		const char *applied_name;
++		int applied_width;
++		int applied_height;
++		bool ticking;
++		int64_t last_detect_msec;
++		int64_t last_tick_msec;
++		struct wl_event_source *timer;
++	} shake;
++
+ 	struct accumulated_scroll {
+ 		double delta;
+ 		double delta_discrete;
+diff --git a/src/config/rcxml.c b/src/config/rcxml.c
+index 4509378..28455f4 100644
+--- a/src/config/rcxml.c
++++ b/src/config/rcxml.c
+@@ -1371,6 +1371,11 @@ entry(xmlNode *node, char *nodename, char *content)
+ 		rc.mag_increment = MAX(0, rc.mag_increment);
+ 	} else if (!strcasecmp(nodename, "useFilter.magnifier")) {
+ 		set_bool(content, &rc.mag_filter);
++	} else if (!strcasecmp(nodename, "enabled.cursorShake")) {
++		set_bool(content, &rc.cursor_shake_enabled);
++	} else if (!strcasecmp(nodename, "maxScale.cursorShake")) {
++		set_float(content, &rc.cursor_shake_max_scale);
++		rc.cursor_shake_max_scale = MAX(1.0, rc.cursor_shake_max_scale);
+ 	}
+ 
+ 	return false;
+@@ -1520,6 +1525,9 @@ rcxml_init(void)
+ 	rc.mag_scale = 2.0;
+ 	rc.mag_increment = 0.2;
+ 	rc.mag_filter = true;
++
++	rc.cursor_shake_enabled = false;
++	rc.cursor_shake_max_scale = 4.0;
+ }
+ 
+ static void
+diff --git a/src/input/cursor-shake.c b/src/input/cursor-shake.c
+new file mode 100644
+index 0000000..5112515
+--- /dev/null
++++ b/src/input/cursor-shake.c
+@@ -0,0 +1,91 @@
++// SPDX-License-Identifier: GPL-2.0-only
++#include "input/cursor-shake.h"
++#include <math.h>
++
++/* Only movement within this time frame is considered */
++#define SHAKE_WINDOW_MSEC 600
++/* A new sample is recorded only after moving at least this far (px) */
++#define SHAKE_MIN_STEP 6.0
++/* The movement must span at least this distance (px) to count */
++#define SHAKE_MIN_EXTENT 60.0
++/* Direction reversals needed within the window (L-R-L-R is 3) */
++#define SHAKE_MIN_REVERSALS 3
++
++void
++cursor_shake_reset(struct cursor_shake *shake)
++{
++	shake->head = 0;
++	shake->count = 0;
++}
++
++static struct cursor_shake_sample *
++sample_at(struct cursor_shake *shake, int i)
++{
++	return &shake->samples[(shake->head + i) % CURSOR_SHAKE_MAX_SAMPLES];
++}
++
++static void
++drop_oldest(struct cursor_shake *shake)
++{
++	shake->head = (shake->head + 1) % CURSOR_SHAKE_MAX_SAMPLES;
++	shake->count--;
++}
++
++bool
++cursor_shake_feed(struct cursor_shake *shake, double x, double y,
++		uint32_t time_msec)
++{
++	/* Forget samples that are too old (unsigned math survives wrap) */
++	while (shake->count > 0 && (uint32_t)(time_msec
++			- sample_at(shake, 0)->time_msec) > SHAKE_WINDOW_MSEC) {
++		drop_oldest(shake);
++	}
++
++	if (shake->count > 0) {
++		struct cursor_shake_sample *last =
++			sample_at(shake, shake->count - 1);
++		if (hypot(x - last->x, y - last->y) < SHAKE_MIN_STEP) {
++			/* Too small to matter (jitter), keep state as-is */
++			goto evaluate;
++		}
++	}
++
++	if (shake->count == CURSOR_SHAKE_MAX_SAMPLES) {
++		drop_oldest(shake);
++	}
++	struct cursor_shake_sample *s = sample_at(shake, shake->count);
++	s->x = x;
++	s->y = y;
++	s->time_msec = time_msec;
++	shake->count++;
++
++evaluate:
++	if (shake->count < SHAKE_MIN_REVERSALS + 2) {
++		return false;
++	}
++
++	double min_x = sample_at(shake, 0)->x, max_x = min_x;
++	double min_y = sample_at(shake, 0)->y, max_y = min_y;
++	int reversals = 0;
++
++	for (int i = 1; i < shake->count; i++) {
++		struct cursor_shake_sample *a = sample_at(shake, i - 1);
++		struct cursor_shake_sample *b = sample_at(shake, i);
++		min_x = fmin(min_x, b->x);
++		max_x = fmax(max_x, b->x);
++		min_y = fmin(min_y, b->y);
++		max_y = fmax(max_y, b->y);
++
++		if (i >= 2) {
++			struct cursor_shake_sample *p = sample_at(shake, i - 2);
++			double v1x = a->x - p->x, v1y = a->y - p->y;
++			double v2x = b->x - a->x, v2y = b->y - a->y;
++			if (v1x * v2x + v1y * v2y < 0) {
++				reversals++;
++			}
++		}
++	}
++
++	double extent = hypot(max_x - min_x, max_y - min_y);
++	return extent >= SHAKE_MIN_EXTENT && reversals >= SHAKE_MIN_REVERSALS;
++}
+diff --git a/src/input/cursor.c b/src/input/cursor.c
+index 9867956..e6d7d12 100644
+--- a/src/input/cursor.c
++++ b/src/input/cursor.c
+@@ -2,6 +2,8 @@
+ #define _POSIX_C_SOURCE 200809L
+ #include "input/cursor.h"
+ #include <assert.h>
++#include <cairo.h>
++#include <math.h>
+ #include <time.h>
+ #include <wlr/backend/libinput.h>
+ #include <wlr/types/wlr_cursor.h>
+@@ -17,6 +19,7 @@
+ #include <wlr/types/wlr_xdg_shell.h>
+ #include <wlr/util/region.h>
+ #include "action.h"
++#include "buffer.h"
+ #include "common/macros.h"
+ #include "common/mem.h"
+ #include "config/mousebind.h"
+@@ -143,6 +146,223 @@ get_toplevel(struct wlr_surface *surface)
+ 	return NULL;
+ }
+ 
++/*
++ * Cursor shake: while the pointer is shaken, the cursor image is scaled up
++ * smoothly and shrinks back once the shaking stops.
++ *
++ * The enlarged image is made from the biggest bitmap of the cursor theme
++ * (seat->shake.source, loaded once) and scaled with cairo, so the theme does
++ * not need to provide bitmaps of every size. A timer drives the animation.
++ */
++#define SHAKE_HOLD_MSEC 400
++#define SHAKE_GROW_MSEC 300
++#define SHAKE_SHRINK_MSEC 400
++#define SHAKE_TICK_MSEC 16
++/* Upper limit of the scale to keep the cursor image at a sane size */
++#define SHAKE_MAX_SCALE_LIMIT 20.0f
++
++static int64_t
++shake_now_msec(void)
++{
++	struct timespec ts;
++	clock_gettime(CLOCK_MONOTONIC, &ts);
++	return (int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
++}
++
++static float
++shake_max_scale(void)
++{
++	return fminf(fmaxf(rc.cursor_shake_max_scale, 1.0f),
++		SHAKE_MAX_SCALE_LIMIT);
++}
++
++/* Name of the cursor shape currently shown, or NULL if drawn by a client */
++static const char *
++shake_current_name(struct seat *seat)
++{
++	return seat->server_cursor == LAB_CURSOR_CLIENT
++		? seat->client_cursor_shape : cursor_names[seat->server_cursor];
++}
++
++/* Show the cursor at the current shake scale */
++static void
++shake_apply(struct seat *seat)
++{
++	if (!seat->cursor_visible) {
++		return;
++	}
++	const char *name = shake_current_name(seat);
++	if (!name) {
++		/* The client draws its own cursor image, nothing to scale */
++		return;
++	}
++
++	if (seat->shake.scale <= 1.0f) {
++		if (seat->shake.applied_name) {
++			/* Back to the normal cursor image */
++			seat->shake.applied_name = NULL;
++			seat->shake.applied_width = 0;
++			seat->shake.applied_height = 0;
++			wlr_cursor_unset_image(seat->cursor);
++			wlr_cursor_set_xcursor(seat->cursor,
++				seat->xcursor_manager, name);
++		}
++		return;
++	}
++
++	if (!seat->shake.source) {
++		return;
++	}
++	struct wlr_xcursor *base =
++		wlr_xcursor_manager_get_xcursor(seat->xcursor_manager, name, 1);
++	struct wlr_xcursor *src =
++		wlr_xcursor_manager_get_xcursor(seat->shake.source, name, 1);
++	if (!base || !src || !base->image_count || !src->image_count) {
++		return;
++	}
++	struct wlr_xcursor_image *base_img = base->images[0];
++	struct wlr_xcursor_image *src_img = src->images[0];
++
++	int out_w = lroundf(base_img->width * seat->shake.scale);
++	int out_h = lroundf(base_img->height * seat->shake.scale);
++	if (out_w < 1 || out_h < 1 || !src_img->width || !src_img->height) {
++		return;
++	}
++	if (seat->shake.applied_name == name
++			&& seat->shake.applied_width == out_w
++			&& seat->shake.applied_height == out_h) {
++		/* Nothing changed, avoid redrawing the same image */
++		return;
++	}
++
++	double fx = (double)out_w / src_img->width;
++	double fy = (double)out_h / src_img->height;
++
++	struct lab_data_buffer *buffer = buffer_create_cairo(out_w, out_h, 1.0);
++	cairo_t *cairo = cairo_create(buffer->surface);
++	/* xcursor images are premultiplied ARGB32, same as cairo */
++	cairo_surface_t *image = cairo_image_surface_create_for_data(
++		src_img->buffer, CAIRO_FORMAT_ARGB32,
++		src_img->width, src_img->height, src_img->width * 4);
++	cairo_scale(cairo, fx, fy);
++	cairo_set_source_surface(cairo, image, 0, 0);
++	cairo_pattern_set_filter(cairo_get_source(cairo), CAIRO_FILTER_BEST);
++	cairo_pattern_set_extend(cairo_get_source(cairo), CAIRO_EXTEND_PAD);
++	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
++	cairo_paint(cairo);
++	cairo_surface_flush(buffer->surface);
++	cairo_surface_destroy(image);
++	cairo_destroy(cairo);
++
++	wlr_cursor_set_buffer(seat->cursor, &buffer->base,
++		lroundf(src_img->hotspot_x * fx),
++		lroundf(src_img->hotspot_y * fy), 1.0f);
++	/* The cursor keeps its own reference to the buffer */
++	wlr_buffer_drop(&buffer->base);
++
++	seat->shake.applied_name = name;
++	seat->shake.applied_width = out_w;
++	seat->shake.applied_height = out_h;
++}
++
++/*
++ * To be called after the server or a client changed the cursor image, so
++ * that an ongoing enlargement is not lost.
++ */
++static void
++shake_refresh(struct seat *seat)
++{
++	if (seat->shake.scale > 1.0f) {
++		/* The image was replaced behind our back */
++		seat->shake.applied_name = NULL;
++		shake_apply(seat);
++	}
++}
++
++static void
++shake_reset(struct seat *seat)
++{
++	if (seat->shake.source) {
++		wlr_xcursor_manager_destroy(seat->shake.source);
++		seat->shake.source = NULL;
++	}
++	seat->shake.scale = 1.0f;
++	seat->shake.applied_name = NULL;
++	seat->shake.ticking = false;
++	cursor_shake_reset(&seat->shake.detector);
++	if (seat->shake.timer) {
++		/* Disarm the timer */
++		wl_event_source_timer_update(seat->shake.timer, 0);
++	}
++}
++
++/* Load the theme used as the source of the enlarged cursor images */
++static void
++shake_load_source(struct seat *seat)
++{
++	if (!rc.cursor_shake_enabled) {
++		return;
++	}
++	/* Asking for a big size makes the theme pick its biggest bitmaps */
++	seat->shake.source = wlr_xcursor_manager_create(getenv("XCURSOR_THEME"),
++		(uint32_t)lroundf(seat->cursor_size * shake_max_scale()));
++	if (seat->shake.source) {
++		wlr_xcursor_manager_load(seat->shake.source, 1);
++	}
++}
++
++static int
++handle_shake_timer(void *data)
++{
++	struct seat *seat = data;
++	int64_t now = shake_now_msec();
++	int64_t dt = MAX(1, MIN(now - seat->shake.last_tick_msec, 50));
++	seat->shake.last_tick_msec = now;
++
++	float max_scale = shake_max_scale();
++	float span = max_scale - 1.0f;
++	bool shaking = now - seat->shake.last_detect_msec < SHAKE_HOLD_MSEC;
++
++	if (shaking) {
++		seat->shake.scale += span * dt / SHAKE_GROW_MSEC;
++	} else {
++		seat->shake.scale -= span * dt / SHAKE_SHRINK_MSEC;
++	}
++	seat->shake.scale = fmaxf(1.0f, fminf(seat->shake.scale, max_scale));
++
++	shake_apply(seat);
++
++	if (shaking || seat->shake.scale > 1.0f) {
++		wl_event_source_timer_update(seat->shake.timer,
++			SHAKE_TICK_MSEC);
++	} else {
++		seat->shake.ticking = false;
++	}
++	return 0;
++}
++
++static void
++shake_update(struct seat *seat, uint32_t time_msec)
++{
++	if (!rc.cursor_shake_enabled || !seat->shake.timer
++			|| !seat->shake.source) {
++		return;
++	}
++	if (!cursor_shake_feed(&seat->shake.detector, seat->cursor->x,
++			seat->cursor->y, time_msec)) {
++		return;
++	}
++
++	int64_t now = shake_now_msec();
++	seat->shake.last_detect_msec = now;
++	if (!seat->shake.ticking) {
++		seat->shake.ticking = true;
++		seat->shake.last_tick_msec = now;
++		wl_event_source_timer_update(seat->shake.timer,
++			SHAKE_TICK_MSEC);
++	}
++}
++
+ static void
+ handle_request_set_cursor(struct wl_listener *listener, void *data)
+ {
+@@ -194,6 +414,7 @@ handle_request_set_cursor(struct wl_listener *listener, void *data)
+ 		 * continue to do so as the cursor moves between outputs.
+ 		 */
+ 
++		seat->client_cursor_shape = NULL;
+ 		wlr_cursor_set_surface(seat->cursor, event->surface,
+ 			event->hotspot_x, event->hotspot_y);
+ 	}
+@@ -241,7 +462,9 @@ handle_request_set_shape(struct wl_listener *listener, void *data)
+ 	}
+ 
+ 	wlr_log(WLR_DEBUG, "set xcursor to shape %s", shape_name);
++	seat->client_cursor_shape = shape_name;
+ 	wlr_cursor_set_xcursor(seat->cursor, seat->xcursor_manager, shape_name);
++	shake_refresh(seat);
+ }
+ 
+ static void
+@@ -388,6 +611,8 @@ cursor_set(struct seat *seat, enum lab_cursors cursor)
+ 			cursor_names[cursor]);
+ 	}
+ 	seat->server_cursor = cursor;
++	seat->client_cursor_shape = NULL;
++	shake_refresh(seat);
+ }
+ 
+ void
+@@ -435,6 +660,7 @@ cursor_update_image(struct seat *seat)
+ 	wlr_cursor_unset_image(seat->cursor);
+ 	wlr_cursor_set_xcursor(seat->cursor, seat->xcursor_manager,
+ 		cursor_names[cursor]);
++	shake_refresh(seat);
+ }
+ 
+ static void
+@@ -581,9 +807,20 @@ cursor_update_common(struct server *server, const struct cursor_context *ctx,
+ 		 * cursor image will be set by request_cursor_notify()
+ 		 * in response to the enter event.
+ 		 */
++		struct wlr_surface *prev_focus =
++			wlr_seat->pointer_state.focused_surface;
+ 		wlr_seat_pointer_notify_enter(wlr_seat, ctx->surface,
+ 			ctx->sx, ctx->sy);
+ 		seat->server_cursor = LAB_CURSOR_CLIENT;
++		if (prev_focus != ctx->surface) {
++			/*
++			 * Entered another surface, its client is expected
++			 * to set a new cursor image. This function runs on
++			 * every motion, so the shape must not be forgotten
++			 * while the pointer stays over the same surface.
++			 */
++			seat->client_cursor_shape = NULL;
++		}
+ 	} else {
+ 		/*
+ 		 * Cursor is over a server (labwc) surface.  Clear focus
+@@ -891,6 +1128,7 @@ preprocess_cursor_motion(struct seat *seat, struct wlr_pointer *pointer,
+ 	 * without any input.
+ 	 */
+ 	wlr_cursor_move(seat->cursor, &pointer->base, dx, dy);
++	shake_update(seat, time_msec);
+ 	double sx, sy;
+ 	bool notify = cursor_process_motion(seat->server, time_msec, &sx, &sy);
+ 	if (notify) {
+@@ -1571,11 +1809,15 @@ cursor_load(struct seat *seat)
+ 	const char *xcursor_size = getenv("XCURSOR_SIZE");
+ 	uint32_t size = xcursor_size ? atoi(xcursor_size) : 24;
+ 
++	seat->cursor_size = size;
++	shake_reset(seat);
++
+ 	if (seat->xcursor_manager) {
+ 		wlr_xcursor_manager_destroy(seat->xcursor_manager);
+ 	}
+ 	seat->xcursor_manager = wlr_xcursor_manager_create(xcursor_theme, size);
+ 	wlr_xcursor_manager_load(seat->xcursor_manager, 1);
++	shake_load_source(seat);
+ 
+ 	/*
+ 	 * Wlroots provides integrated fallback cursor icons using
+@@ -1623,6 +1865,8 @@ cursor_reload(struct seat *seat)
+ void
+ cursor_init(struct seat *seat)
+ {
++	seat->shake.timer = wl_event_loop_add_timer(
++		seat->server->wl_event_loop, handle_shake_timer, seat);
+ 	cursor_load(seat);
+ 
+ 	/* Set the initial cursor image so the cursor is visible right away */
+@@ -1673,6 +1917,11 @@ void cursor_finish(struct seat *seat)
+ 	wl_list_remove(&seat->request_set_selection.link);
+ 	wl_list_remove(&seat->request_set_primary_selection.link);
+ 
++	shake_reset(seat);
++	if (seat->shake.timer) {
++		wl_event_source_remove(seat->shake.timer);
++		seat->shake.timer = NULL;
++	}
+ 	wlr_xcursor_manager_destroy(seat->xcursor_manager);
+ 	wlr_cursor_destroy(seat->cursor);
+ 
+diff --git a/src/input/meson.build b/src/input/meson.build
+index 4d56f00..6dda322 100644
+--- a/src/input/meson.build
++++ b/src/input/meson.build
+@@ -1,5 +1,6 @@
+ labwc_sources += files(
+   'cursor.c',
++  'cursor-shake.c',
+   'tablet.c',
+   'tablet-pad.c',
+   'gestures.c',

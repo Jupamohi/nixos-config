@@ -81,4 +81,10 @@
 
   </keyboard>
 
+  <!-- Cursor: hacer crecer agitandolo -->
+  <cursorShake>
+    <enabled>yes</enabled>
+    <maxScale>5.0</maxScale>
+  </cursorShake>
+
 </labwc_config>
