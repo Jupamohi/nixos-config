@@ -107,4 +107,21 @@
       plasmarc.Wallpapers.usersWallpapers = "/home/jupamohi/nixos-config/dotfiles/wallpapers/windows-11-dark-mode-abstract-background-black-background-7680x4320-8710.png,/home/jupamohi/nixos-config/dotfiles/wallpapers/linux-3840x2160-18053.png,/home/jupamohi/nixos-config/dotfiles/wallpapers/japan-artistic-5120x2880-25406.jpg";
     };
   };
+  systemd.user.services.plasma-manager-late = {
+    Unit = {
+      Description = "Reaplica la config de plasma-manager cuando plasmashell esta listo";
+      After = [ "plasma-plasmashell.service" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "plasma-manager-late" ''
+        for i in $(seq 1 60); do
+          ${pkgs.systemd}/bin/busctl --user status org.kde.plasmashell >/dev/null 2>&1 && break
+          sleep 1
+        done
+        exec "$HOME/.local/share/plasma-manager/run_all.sh"
+      '';
+    };
+    Install.WantedBy = [ "plasma-workspace.target" ];
+  };
 }

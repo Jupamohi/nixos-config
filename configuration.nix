@@ -174,13 +174,14 @@
   programs.caelestia-kde.enable = true;
 
   # El modulo caelestia-kde ata el servicio a graphical-session.target, que SDDM
-  # activa en las tres sesiones (Plasma, XFCE, Hyprland). Anadimos la misma
-  # guarda de entorno que hyprpolkitagent para que se omita fuera de Plasma:
-  # plasma.desktop declara DesktopNames=KDE y SDDM exporta
-  # XDG_CURRENT_DESKTOP=KDE en Plasma Wayland; en XFCE el valor es XFCE y en
-  # Hyprland es Hyprland, de modo que el servicio no arranca alli.
+  # activa en todas las sesiones. La guarda ConditionEnvironment fallaba en Plasma
+  # porque XDG_CURRENT_DESKTOP aun no esta importado en el entorno de systemd
+  # cuando se evalua. Lo enganchamos a plasma-workspace.target, que solo existe
+  # en Plasma y se activa despues de importar el entorno.
   systemd.user.services.caelestia-shell = {
-    unitConfig.ConditionEnvironment = "XDG_CURRENT_DESKTOP=KDE";
+    wantedBy = lib.mkForce [ "plasma-workspace.target" ];
+    partOf   = lib.mkForce [ "plasma-workspace.target" ];
+    after    = lib.mkForce [ "plasma-workspace.target" ];
   };
 
   # Configure keymap in X11

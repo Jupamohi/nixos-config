@@ -34,7 +34,7 @@
       "autoHide": false,
       "autoHideDelay": 250,
       "autoHideStrict": false,
-      "barInsetPadding": 10,
+      "barInsetPadding": 15,
       "barLengthPadding": 0,
       "batteryColorMode": "theme",
       "borderColor": "surfaceText",
@@ -62,7 +62,7 @@
       "gothCornersEnabled": false,
       "hoverPopoutDelay": 150,
       "hoverPopouts": false,
-      "iconScale": 1,
+      "iconScale": 1.08,
       "id": "default",
       "innerPadding": 19,
       "leftWidgets": [
@@ -88,8 +88,8 @@
         "notificationButton",
         "battery",
         {
-          "id": "controlCenterButton",
           "enabled": true,
+          "id": "controlCenterButton",
           "showBrightnessIcon": true
         },
         {
@@ -119,7 +119,9 @@
       "widgetOutlineOpacity": 1,
       "widgetOutlineThickness": 1,
       "widgetPadding": 9,
-      "widgetTransparency": 1
+      "widgetTransparency": 1,
+      "island": false,
+      "islandFloating": false
     }
   ],
   "desktopClockCustomColor": {
