@@ -26,9 +26,4 @@
 
   services.spice-vdagentd.enable = lib.mkForce false;
 
-  # El backend de portal de KDE no debe usar el tema "xdgdesktopportal": consulta
-  # al portal principal al arrancar y ambos se bloquean ~25 s.
-  systemd.user.services.plasma-xdg-desktop-portal-kde.environment = {
-    QT_QPA_PLATFORMTHEME = lib.mkForce "kde";
-  };
 }

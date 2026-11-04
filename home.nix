@@ -8,9 +8,6 @@
 
   imports = [
     ./modules/home/zsh.nix
-    ./modules/home/plasma.nix
-    ./modules/home/hyprland.nix
-    ./modules/home/dms.nix
   ];
 
   home.file.".p10k.zsh".source = ./dotfiles/zsh/p10k.zsh;
@@ -20,6 +17,4 @@
     source = ./dotfiles/kitty;
     recursive = true;
   };
-  # KoolDots Hyprland (Lua)
-  modules.home.hyprland.enable = true;
 }
