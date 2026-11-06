@@ -29,8 +29,6 @@
   # GNOME y GDM los activa modules/nixos/gnome.nix
   services.xserver.enable = true;
 
-  # XFCE como sesion de respaldo ligera (aparece en GDM)
-  services.xserver.desktopManager.xfce.enable = true;
 
   # 32 bits para Heroic Games Launcher
   hardware.graphics.enable32Bit = true;

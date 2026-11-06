@@ -67,9 +67,9 @@
     noto-fonts
 
     # Theming (GTK)
-    gtk-engine-murrine
-    whitesur-gtk-theme
-    whitesur-icon-theme
+   # gtk-engine-murrine
+   # whitesur-gtk-theme
+   # whitesur-icon-theme
     whitesur-cursors
   ];
 }
