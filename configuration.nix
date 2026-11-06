@@ -146,5 +146,11 @@
     };
   };
 
+  # activar localSend y recibir archivos, el firewall por defecto ya viene en true pero no pierdo nada dejandolo declarado, y me ahorro imprevistos
+  programs.localsend.enable = true;
+  programs.localsend.openFirewall = true;
+
+  # ************************** !OJO¡ no tocar sin comprobar antes ******************************************************************
   system.stateVersion = "26.05";
+  # ******************************************************************************************************************************
 }
