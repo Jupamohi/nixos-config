@@ -5,6 +5,7 @@ let
     system-monitor
     caffeine
     clipboard-indicator
+	appindicator
   ];
 in
 {
