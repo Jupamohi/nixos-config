@@ -57,6 +57,8 @@
     heroic
     efibootmgr
     evtest
+	gparted
+	unetbootin
 
     # Multimedia
     quodlibet
