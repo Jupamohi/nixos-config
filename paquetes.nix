@@ -59,6 +59,8 @@
     evtest
 	gparted
 	unetbootin
+	mpv
+    ffmpeg
 
     # Multimedia
     quodlibet

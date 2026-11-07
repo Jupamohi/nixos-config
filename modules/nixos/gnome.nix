@@ -6,6 +6,7 @@ let
     caffeine
     clipboard-indicator
 	appindicator
+	gnome-wallpaper-engine
   ];
 in
 {
