@@ -63,7 +63,7 @@
     ffmpeg
 
     # Multimedia
-    quodlibet
+    amberol
 
     # Fuentes
     fira-code
