@@ -15,6 +15,8 @@
     git
     obsidian
     pgadmin4-desktopmode
+	lazygit
+
 
     # Terminal / shell
     zsh
