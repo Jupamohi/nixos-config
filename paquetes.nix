@@ -14,8 +14,6 @@
     neovim
     git
     obsidian
-    mysql-workbench
-    mysql84
     pgadmin4-desktopmode
 
     # Terminal / shell
@@ -71,9 +69,6 @@
     noto-fonts
 
     # Theming (GTK)
-   # gtk-engine-murrine
-   # whitesur-gtk-theme
-   # whitesur-icon-theme
     whitesur-cursors
   ];
 }
