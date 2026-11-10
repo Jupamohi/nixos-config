@@ -16,6 +16,7 @@
     obsidian
     pgadmin4-desktopmode
 	lazygit
+    gitleaks
 
 
     # Terminal / shell
