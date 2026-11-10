@@ -150,6 +150,9 @@
   programs.localsend.enable = true;
   programs.localsend.openFirewall = true;
 
+  # habilitar gamemode
+  programs.gamemode.enable = true;
+
   # ************************** !OJO¡ no tocar sin comprobar antes ******************************************************************
   system.stateVersion = "26.05";
   # ******************************************************************************************************************************

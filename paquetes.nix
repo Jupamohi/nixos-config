@@ -61,6 +61,7 @@
 	unetbootin
 	mpv
     ffmpeg
+	gamemode
 
     # Multimedia
     amberol
